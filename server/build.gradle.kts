@@ -8,16 +8,20 @@ plugins {
 group = "to.bnt.draw"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    maven("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven")
-}
-
 dependencies {
+    val ktorVersion: String by project
+    val exposedVersion: String by project
     implementation(project(":shared"))
     testImplementation(kotlin("test"))
-    implementation("io.ktor:ktor-server-netty:1.6.4")
-    implementation("io.ktor:ktor-html-builder:1.6.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.3")
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-serialization:$ktorVersion")
+    implementation("ch.qos.logback:logback-classic:1.2.7")
+    implementation("org.postgresql:postgresql:42.3.1")
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
 }
 
 tasks.test {
@@ -29,5 +33,5 @@ tasks.withType<KotlinCompile>() {
 }
 
 application {
-    mainClass.set("ServerKt")
+    mainClass.set("io.ktor.server.netty.EngineMain")
 }
