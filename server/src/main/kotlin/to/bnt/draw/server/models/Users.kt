@@ -7,5 +7,5 @@ object Users : IntIdTable() {
     val hash = text("hash").nullable()
     val googleId = text("google_id").uniqueIndex().nullable()
     val displayName = varchar("display_name", 100)
-    val avatarUrl = text("avatar_url")
+    val avatarUrl = text("avatar_url").nullable()
 }
