@@ -5,7 +5,7 @@ pluginManagement {
         mavenCentral()
     }
 
-    val kotlinVersion = "1.6.0"
+    val kotlinVersion = "1.5.31"
 
     plugins {
         kotlin("android") version kotlinVersion
