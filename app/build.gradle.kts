@@ -13,18 +13,29 @@ repositories {
 dependencies {
     implementation(project(":shared"))
     implementation("com.google.android.material:material:1.4.0")
-    implementation("androidx.appcompat:appcompat:1.3.1")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.1")
+    implementation("androidx.appcompat:appcompat:1.4.0")
+    implementation("androidx.activity:activity-compose:1.4.0")
+
+    val composeVersion: String by project
+    implementation("androidx.compose.material:material:$composeVersion")
+    implementation("androidx.compose.animation:animation:$composeVersion")
+    implementation("androidx.compose.ui:ui-tooling:$composeVersion")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.4.0")
+
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:$composeVersion")
 }
 
 android {
-    compileSdkVersion(29)
+    compileSdk = 31
     defaultConfig {
         applicationId = "to.bnt.draw.app"
-        minSdkVersion(24)
-        targetSdkVersion(29)
+        minSdk = 24
+        targetSdk = 31
         versionCode = 1
         versionName = "1.0"
+    }
+    buildFeatures {
+        compose = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -34,5 +45,12 @@ android {
         getByName("release") {
             isMinifyEnabled = false
         }
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    composeOptions {
+        val composeVersion: String by project
+        kotlinCompilerExtensionVersion = composeVersion
     }
 }
