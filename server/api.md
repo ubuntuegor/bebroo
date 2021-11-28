@@ -21,7 +21,7 @@ Token structure:
 ### Google OAuth
 
 Open a popup navigating to `/api/users/googleAuthorize`. After the login prompt, the token will be sent to the window that opened
-the login popup ([reference](https://github.com/ubuntuegor/bebroo/tree/backend/server/src/main/resources/templates/googleOAuthSuccess.ftl)).
+the login popup ([reference](src/main/resources/templates/googleOAuthSuccess.ftl)).
 
 ### User
 
