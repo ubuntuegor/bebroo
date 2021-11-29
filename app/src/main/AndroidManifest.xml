@@ -3,10 +3,10 @@
     package="to.bnt.draw.app">
 
     <application
-        android:label="@string/app_name"
-        android:allowBackup="false"
-        android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+            android:label="@string/app_name"
+            android:allowBackup="false"
+            android:supportsRtl="true"
+            android:theme="@style/AppTheme" android:icon="@mipmap/icon">
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
