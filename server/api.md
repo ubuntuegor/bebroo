@@ -20,12 +20,12 @@ Token structure:
 
 ### Google OAuth
 
-Open a popup navigating to `/api/users/googleAuthorize`. After the login prompt, the token will be sent to the window that opened
+Open a popup navigating to `/api/auth/googleAuthorize`. After the login prompt, the token will be sent to the window that opened
 the login popup ([reference](src/main/resources/templates/googleOAuthSuccess.ftl)).
 
-### User
+### Authentication
 
-`POST /api/users/signup` — register a new user
+`POST /api/auth/signup` — register a new user
 
 - `username`: `String`
 - `password`: `String`
@@ -37,7 +37,7 @@ the login popup ([reference](src/main/resources/templates/googleOAuthSuccess.ftl
 
 ---
 
-`GET /api/users/login` — login
+`GET /api/auth/login` — login
 
 - `username`: `String`
 - `password`: `String`
@@ -46,10 +46,10 @@ the login popup ([reference](src/main/resources/templates/googleOAuthSuccess.ftl
 
 - `token`: `String`
 
----
+### User
 
-`GET /api/users/me` — get info about current user  
-*Requires authorization*
+`GET /api/user/me` — get info about current user  
+*Requires authentication*
 
 **Response**:
 
@@ -59,8 +59,8 @@ the login popup ([reference](src/main/resources/templates/googleOAuthSuccess.ftl
 
 ---
 
-`PATCH /api/users/me` — modify current user  
-*Requires authorization*
+`PATCH /api/user/me` — modify current user  
+*Requires authentication*
 
 - `displayName`: `String`
 
@@ -69,8 +69,8 @@ empty
 
 ### Boards
 
-`GET /api/boards/list` — get user's boards  
-*Requires authorization*
+`GET /api/board/list` — get user's boards  
+*Requires authentication*
 
 **Response**:
 
@@ -85,9 +85,8 @@ empty
 
 ---
 
-`GET /api/boards/open` — open a board (unless another's private)
+`GET /api/board/{uuid}` — open a board (unless another's private)
 
-- `uuid`: `String`
 - `fields`: `String` — comma-separated list of returned fields: `name`, `private`, `creator`, `contributors`
   , `figures` (default: `name`)
 
@@ -112,7 +111,16 @@ empty
 
 ---
 
-`POST /api/boards/create` — create a board  
+`PATCH /api/board/{uuid}` — modify a board
+
+- `name`: `String?`
+- `private`: `bool?`
+
+**Response**: empty
+
+---
+
+`POST /api/board/create` — create a board  
 *Requires authentication*
 
 - `name`: `String`
@@ -121,21 +129,10 @@ empty
 
 - `uuid`: `String`
 
----
-
-`PATCH /api/boards/edit` — modify a board
-
-- `uuid`: `String`
-- `name`: `String?`
-- `private`: `bool?`
-
-**Response**: empty
-
 ### Board WebSocket
 
-`WS /api/boards/websocket`
+`WS /api/board/{uuid}/websocket`
 
-- `uuid`: `String`
 - `figureId`: `int?` — last received figure ID
 
 Communication using JSON

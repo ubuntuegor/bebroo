@@ -1,4 +1,4 @@
-package to.bnt.draw.server.api.users
+package to.bnt.draw.server.api.auth
 
 import io.ktor.application.*
 import io.ktor.auth.*
@@ -13,7 +13,26 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import to.bnt.draw.server.api.httpClient
+import to.bnt.draw.server.api.users.createToken
 import to.bnt.draw.server.models.Users
+
+fun Authentication.Configuration.googleOauth(environment: ApplicationEnvironment) {
+    oauth("google-oauth") {
+        urlProvider = { environment.config.property("googleOAuth.redirectUrl").getString() }
+        providerLookup = {
+            OAuthServerSettings.OAuth2ServerSettings(
+                name = "google",
+                authorizeUrl = "https://accounts.google.com/o/oauth2/v2/auth",
+                accessTokenUrl = "https://oauth2.googleapis.com/token",
+                requestMethod = HttpMethod.Post,
+                clientId = System.getenv("GOOGLE_CLIENT_ID"),
+                clientSecret = System.getenv("GOOGLE_CLIENT_SECRET"),
+                defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile")
+            )
+        }
+        client = httpClient
+    }
+}
 
 @Serializable
 data class GoogleInfo(
@@ -38,32 +57,23 @@ fun Route.googleOAuth() {
 
         get("/googleCallback") {
             val principal: OAuthAccessTokenResponse.OAuth2? = call.principal()
-            if (principal == null) {
-                call.respond(
-                    FreeMarkerContent(
-                        "googleOAuthError.ftl",
-                        mapOf("errorText" to "Не удалось выполнить вход")
-                    )
-                )
-            } else {
+            principal?.let {
                 val oauthToken = principal.accessToken
                 val googleInfo = getGoogleInfo(oauthToken)
 
                 val userId = transaction {
                     val user = Users.select { Users.googleId eq googleInfo.id }.firstOrNull()
-                    if (user != null) {
+                    user?.let {
                         Users.update({ Users.googleId eq googleInfo.id }) {
                             it[displayName] = googleInfo.name
                             it[avatarUrl] = googleInfo.picture
                         }
                         user[Users.id].value
-                    } else {
-                        Users.insertAndGetId {
-                            it[googleId] = googleInfo.id
-                            it[displayName] = googleInfo.name
-                            it[avatarUrl] = googleInfo.picture
-                        }.value
-                    }
+                    } ?: Users.insertAndGetId {
+                        it[googleId] = googleInfo.id
+                        it[displayName] = googleInfo.name
+                        it[avatarUrl] = googleInfo.picture
+                    }.value
                 }
 
                 val token = createToken(application.environment, userId)
@@ -77,7 +87,12 @@ fun Route.googleOAuth() {
                         )
                     )
                 )
-            }
+            } ?: call.respond(
+                FreeMarkerContent(
+                    "googleOAuthError.ftl",
+                    mapOf("errorText" to "Не удалось выполнить вход")
+                )
+            )
         }
     }
 }
