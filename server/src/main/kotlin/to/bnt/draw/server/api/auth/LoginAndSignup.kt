@@ -1,4 +1,4 @@
-package to.bnt.draw.server.api.users
+package to.bnt.draw.server.api.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm

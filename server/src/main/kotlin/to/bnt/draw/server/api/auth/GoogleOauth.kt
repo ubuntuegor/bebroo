@@ -13,7 +13,6 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import to.bnt.draw.server.api.httpClient
-import to.bnt.draw.server.api.users.createToken
 import to.bnt.draw.server.models.Users
 
 fun Authentication.Configuration.googleOauth(environment: ApplicationEnvironment) {

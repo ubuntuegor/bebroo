@@ -13,9 +13,7 @@ import io.ktor.serialization.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
-import to.bnt.draw.server.api.auth.googleOAuth
-import to.bnt.draw.server.api.auth.googleOauth
-import to.bnt.draw.server.api.auth.jwtUser
+import to.bnt.draw.server.api.auth.*
 import to.bnt.draw.server.api.exceptions.ApiException
 import to.bnt.draw.server.api.users.*
 import to.bnt.draw.server.models.*
