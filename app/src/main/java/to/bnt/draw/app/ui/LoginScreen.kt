@@ -2,16 +2,14 @@ package to.bnt.draw.app.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.ButtonDefaults.elevation
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,27 +35,62 @@ fun LoginScreen() {
             contentDescription = "logo",
             modifier = Modifier.padding(top = 28.dp).fillMaxWidth().height(37.dp),
         )
-        BebrooLoginTextField(
-            label = stringResource(R.string.login), modifier = Modifier.padding(top = 40.dp)
-        )
-        BebrooLoginTextField(
-            label = stringResource(R.string.password),
-            modifier = Modifier.padding(top = 14.dp),
-            visualTransformation = PasswordVisualTransformation(),
-            KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-        Button(
-            onClick = { print("Bebra") },
-            modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
-            shape = CircleShape,
-        ) {
-            Text(text = stringResource(R.string.enter), fontSize = 20.sp)
-        }
-        TextButton(
-            onClick = { print("Bebra") },
-            modifier = Modifier.padding(top = 14.dp).align(Alignment.CenterHorizontally),
-        ) {
-            Text(text = stringResource(R.string.register), fontSize = 18.sp)
+        var isRegisterButtonClicked by remember { mutableStateOf(false) }
+        if (!isRegisterButtonClicked) {
+            BebrooLoginTextField(
+                label = stringResource(R.string.login), modifier = Modifier.padding(top = 40.dp)
+            )
+            BebrooLoginTextField(
+                label = stringResource(R.string.password),
+                modifier = Modifier.padding(top = 14.dp),
+                visualTransformation = PasswordVisualTransformation(),
+                KeyboardOptions(keyboardType = KeyboardType.Password)
+            )
+            Button(
+                onClick = { print("Bebra") },
+                modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+                elevation = elevation(
+                    defaultElevation = 0.dp, pressedElevation = 0.dp
+                ),
+                shape = CircleShape,
+            ) {
+                Text(text = stringResource(R.string.enter), fontSize = 20.sp)
+            }
+            TextButton(
+                onClick = { isRegisterButtonClicked = true },
+                modifier = Modifier.padding(top = 14.dp).align(Alignment.CenterHorizontally),
+            ) {
+                Text(text = stringResource(R.string.register), fontSize = 18.sp)
+            }
+        } else {
+            BebrooLoginTextField(
+                label = stringResource(R.string.nickname), modifier = Modifier.padding(top = 40.dp)
+            )
+            BebrooLoginTextField(
+                label = stringResource(R.string.login), modifier = Modifier.padding(top = 14.dp)
+            )
+            BebrooLoginTextField(
+                label = stringResource(R.string.password),
+                modifier = Modifier.padding(top = 14.dp),
+                visualTransformation = PasswordVisualTransformation(),
+                KeyboardOptions(keyboardType = KeyboardType.Password)
+            )
+            Button(
+                onClick = { print("Bebra") },
+                modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+                elevation = elevation(
+                    defaultElevation = 0.dp, pressedElevation = 0.dp
+                ),
+                shape = CircleShape,
+            ) {
+                Text(text = stringResource(R.string.register), fontSize = 20.sp)
+            }
+            TextButton(
+                onClick = { isRegisterButtonClicked = false },
+                modifier = Modifier.padding(top = 14.dp).align(Alignment.CenterHorizontally),
+            ) {
+                Text(text = stringResource(R.string.enter), fontSize = 18.sp)
+            }
         }
         Divider(modifier = Modifier.padding(top = 27.dp).padding(horizontal = 22.dp))
         Button(
@@ -84,21 +117,24 @@ fun LoginScreen() {
                 painter = painterResource(R.drawable.cutted_icon),
                 tint = Color.Unspecified,
                 contentDescription = "cutted icon",
-                modifier = Modifier.align(Alignment.BottomStart).padding(top = 107.dp).padding(start = 17.dp)
+                modifier = Modifier.align(Alignment.BottomStart).padding(top = 70.dp).padding(start = 17.dp)
             )
-            Box(modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 20.dp, start = 14.dp)) {
-                Image(
-                    painter = painterResource(R.drawable.smoothed_background),
-                    contentDescription = null,
-                    modifier = Modifier.size(308.dp, 74.dp),
+            Box(
+                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 20.dp, start = 14.dp).background(
+                    Color(red = 0.96F, green = 0.96F, blue = 0.96F, alpha = 0.8F)
                 )
+            )
+            {
                 Text(
                     text = buildAnnotatedString {
                         append("Интерактивная доска для\nрисования")
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Coral)) {
                             append(" вместе")
                         }
-                    }, modifier = Modifier.align(Alignment.Center), fontSize = 24.sp, fontWeight = FontWeight.Bold
+                    },
+                    modifier = Modifier.align(Alignment.Center),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }

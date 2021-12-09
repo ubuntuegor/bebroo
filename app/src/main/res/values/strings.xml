@@ -6,4 +6,5 @@
     <string name="enter">Войти</string>
     <string name="enter_with_google">Войти через Google</string>
     <string name="register">Регистрация</string>
+    <string name="nickname">Отображаемое имя</string>
 </resources>
