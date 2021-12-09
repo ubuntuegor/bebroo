@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.ButtonDefaults.elevation
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,7 +19,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,14 +35,23 @@ fun LoginScreen() {
         )
         var isRegisterButtonClicked by remember { mutableStateOf(false) }
         if (!isRegisterButtonClicked) {
-            BebrooLoginTextField(
-                label = stringResource(R.string.login), modifier = Modifier.padding(top = 40.dp)
+            var login by remember { mutableStateOf("") }
+            OutlinedTextField(
+                value = login,
+                onValueChange = { login = it },
+                modifier = Modifier.padding(top = 40.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+                label = { Text(stringResource(R.string.login)) },
+                shape = CircleShape,
             )
-            BebrooLoginTextField(
-                label = stringResource(R.string.password),
-                modifier = Modifier.padding(top = 14.dp),
+            var password by remember { mutableStateOf("") }
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+                label = { Text(stringResource(R.string.password)) },
+                shape = CircleShape,
                 visualTransformation = PasswordVisualTransformation(),
-                KeyboardOptions(keyboardType = KeyboardType.Password)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
             Button(
                 onClick = { print("Bebra") },
@@ -63,17 +70,31 @@ fun LoginScreen() {
                 Text(text = stringResource(R.string.register), fontSize = 18.sp)
             }
         } else {
-            BebrooLoginTextField(
-                label = stringResource(R.string.nickname), modifier = Modifier.padding(top = 40.dp)
+            var nickname by remember { mutableStateOf("") }
+            OutlinedTextField(
+                value = nickname,
+                onValueChange = { nickname = it },
+                modifier = Modifier.padding(top = 40.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+                label = { Text(stringResource(R.string.nickname)) },
+                shape = CircleShape,
             )
-            BebrooLoginTextField(
-                label = stringResource(R.string.login), modifier = Modifier.padding(top = 14.dp)
+            var login by remember { mutableStateOf("") }
+            OutlinedTextField(
+                value = login,
+                onValueChange = { login = it },
+                modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+                label = { Text(stringResource(R.string.login)) },
+                shape = CircleShape,
             )
-            BebrooLoginTextField(
-                label = stringResource(R.string.password),
-                modifier = Modifier.padding(top = 14.dp),
+            var password by remember { mutableStateOf("") }
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+                label = { Text(stringResource(R.string.password)) },
+                shape = CircleShape,
                 visualTransformation = PasswordVisualTransformation(),
-                KeyboardOptions(keyboardType = KeyboardType.Password)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
             Button(
                 onClick = { print("Bebra") },
@@ -139,23 +160,4 @@ fun LoginScreen() {
             }
         }
     }
-}
-
-@Composable
-fun BebrooLoginTextField(
-    label: String,
-    modifier: Modifier,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-    ketBoardOptions: KeyboardOptions = KeyboardOptions()
-) {
-    var text by rememberSaveable { mutableStateOf("") }
-    OutlinedTextField(
-        value = text,
-        onValueChange = { text = it },
-        modifier = modifier.padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
-        label = { Text(label) },
-        visualTransformation = visualTransformation,
-        keyboardOptions = ketBoardOptions,
-        shape = CircleShape,
-    )
 }
