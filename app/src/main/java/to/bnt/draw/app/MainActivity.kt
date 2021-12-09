@@ -1,6 +1,5 @@
 package to.bnt.draw.app
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,7 +11,6 @@ import to.bnt.draw.app.ui.LoginScreen
 
 
 class MainActivity : ComponentActivity() {
-    @SuppressLint("ResourceType")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
