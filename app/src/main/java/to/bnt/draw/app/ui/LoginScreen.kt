@@ -1,0 +1,125 @@
+package to.bnt.draw.app.ui
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.*
+import androidx.compose.material.ButtonDefaults.elevation
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import to.bnt.draw.app.R
+import to.bnt.draw.app.theme.Coral
+
+@Composable
+fun LoginScreen() {
+    Column {
+        Image(
+            painter = painterResource(R.drawable.logo),
+            contentDescription = "logo",
+            modifier = Modifier.padding(top = 28.dp).fillMaxWidth().height(37.dp),
+        )
+        BebrooLoginTextField(
+            label = stringResource(R.string.login), modifier = Modifier.padding(top = 40.dp)
+        )
+        BebrooLoginTextField(
+            label = stringResource(R.string.password),
+            modifier = Modifier.padding(top = 14.dp),
+            visualTransformation = PasswordVisualTransformation(),
+            KeyboardOptions(keyboardType = KeyboardType.Password)
+        )
+        Button(
+            onClick = { print("Bebra") },
+            modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+            shape = CircleShape,
+        ) {
+            Text(text = stringResource(R.string.enter), fontSize = 20.sp)
+        }
+        TextButton(
+            onClick = { print("Bebra") },
+            modifier = Modifier.padding(top = 14.dp).align(Alignment.CenterHorizontally),
+        ) {
+            Text(text = stringResource(R.string.register), fontSize = 18.sp)
+        }
+        Divider(modifier = Modifier.padding(top = 27.dp).padding(horizontal = 22.dp))
+        Button(
+            onClick = { print("Bebra") },
+            modifier = Modifier.padding(top = 26.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+            elevation = elevation(
+                defaultElevation = 0.dp, pressedElevation = 0.dp
+            ),
+            shape = CircleShape,
+            border = BorderStroke(2.dp, Color.LightGray),
+            colors = ButtonDefaults.buttonColors(MaterialTheme.colors.background),
+        ) {
+
+            Image(
+                painter = painterResource(R.drawable.ic_google_logo),
+                contentDescription = "Google Button",
+            )
+            Spacer(modifier = Modifier.width(24.dp))
+            Text(text = stringResource(R.string.enter_with_google), fontSize = 20.sp)
+
+        }
+        Box(modifier = Modifier.fillMaxSize()) {
+            Icon(
+                painter = painterResource(R.drawable.cutted_icon),
+                tint = Color.Unspecified,
+                contentDescription = "cutted icon",
+                modifier = Modifier.align(Alignment.BottomStart).padding(top = 107.dp).padding(start = 17.dp)
+            )
+            Box(modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 20.dp, start = 14.dp)) {
+                Image(
+                    painter = painterResource(R.drawable.smoothed_background),
+                    contentDescription = null,
+                    modifier = Modifier.size(308.dp, 74.dp),
+                )
+                Text(
+                    text = buildAnnotatedString {
+                        append("Интерактивная доска для\nрисования")
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Coral)) {
+                            append(" вместе")
+                        }
+                    }, modifier = Modifier.align(Alignment.Center), fontSize = 24.sp, fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun BebrooLoginTextField(
+    label: String,
+    modifier: Modifier,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    ketBoardOptions: KeyboardOptions = KeyboardOptions()
+) {
+    var text by rememberSaveable { mutableStateOf("") }
+    OutlinedTextField(
+        value = text,
+        onValueChange = { text = it },
+        modifier = modifier.padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+        label = { Text(label) },
+        visualTransformation = visualTransformation,
+        keyboardOptions = ketBoardOptions,
+        shape = CircleShape,
+    )
+}
