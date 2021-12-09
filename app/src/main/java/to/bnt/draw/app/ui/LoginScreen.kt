@@ -34,25 +34,36 @@ fun LoginScreen() {
             modifier = Modifier.padding(top = 28.dp).fillMaxWidth().height(37.dp),
         )
         var isRegisterButtonClicked by remember { mutableStateOf(false) }
-        if (!isRegisterButtonClicked) {
-            var login by remember { mutableStateOf("") }
+        if (isRegisterButtonClicked) {
+            var nickname by remember { mutableStateOf("") }
             OutlinedTextField(
-                value = login,
-                onValueChange = { login = it },
+                value = nickname,
+                onValueChange = { nickname = it },
                 modifier = Modifier.padding(top = 40.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
-                label = { Text(stringResource(R.string.login)) },
+                label = { Text(stringResource(R.string.nickname)) },
                 shape = CircleShape,
             )
-            var password by remember { mutableStateOf("") }
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
-                label = { Text(stringResource(R.string.password)) },
-                shape = CircleShape,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-            )
+        }
+        var login by remember { mutableStateOf("") }
+        OutlinedTextField(
+            value = login,
+            onValueChange = { login = it },
+            modifier = Modifier.padding(top = (14 + if (!isRegisterButtonClicked) 26 else 0).dp)
+                .padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+            label = { Text(stringResource(R.string.login)) },
+            shape = CircleShape,
+        )
+        var password by remember { mutableStateOf("") }
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
+            label = { Text(stringResource(R.string.password)) },
+            shape = CircleShape,
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+        )
+        if (!isRegisterButtonClicked) {
             Button(
                 onClick = { print("Bebra") },
                 modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
@@ -70,32 +81,6 @@ fun LoginScreen() {
                 Text(text = stringResource(R.string.register), fontSize = 18.sp)
             }
         } else {
-            var nickname by remember { mutableStateOf("") }
-            OutlinedTextField(
-                value = nickname,
-                onValueChange = { nickname = it },
-                modifier = Modifier.padding(top = 40.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
-                label = { Text(stringResource(R.string.nickname)) },
-                shape = CircleShape,
-            )
-            var login by remember { mutableStateOf("") }
-            OutlinedTextField(
-                value = login,
-                onValueChange = { login = it },
-                modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
-                label = { Text(stringResource(R.string.login)) },
-                shape = CircleShape,
-            )
-            var password by remember { mutableStateOf("") }
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
-                label = { Text(stringResource(R.string.password)) },
-                shape = CircleShape,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-            )
             Button(
                 onClick = { print("Bebra") },
                 modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
