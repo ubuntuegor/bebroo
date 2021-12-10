@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import to.bnt.draw.app.R
 import to.bnt.draw.app.theme.Coral
+import to.bnt.draw.app.theme.WhiteSemiTransparent
 
 @Composable
 fun LoginScreen() {
@@ -126,9 +127,8 @@ fun LoginScreen() {
                 modifier = Modifier.align(Alignment.BottomStart).padding(top = 70.dp).padding(start = 17.dp)
             )
             Box(
-                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 20.dp, start = 14.dp).background(
-                    Color(red = 0.96F, green = 0.96F, blue = 0.96F, alpha = 0.8F)
-                )
+                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 20.dp, start = 14.dp)
+                    .background(WhiteSemiTransparent)
             )
             {
                 Text(

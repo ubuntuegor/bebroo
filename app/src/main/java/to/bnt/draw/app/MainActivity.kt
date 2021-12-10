@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import to.bnt.draw.app.theme.MyApplicationTheme
+import to.bnt.draw.app.ui.Desk
+import to.bnt.draw.app.ui.DrawingBoardScreen
 import to.bnt.draw.app.ui.LoginScreen
 import to.bnt.draw.app.ui.MenuScreen
 
@@ -19,7 +21,9 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
                     Column {
-                        MenuScreen()
+                       DrawingBoardScreen("Подготовка к экзамену")
+                        //Desk()
+                        //MenuScreen()
                         //LoginScreen()
                     }
                 }
