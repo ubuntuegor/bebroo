@@ -11,16 +11,17 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import to.bnt.draw.app.R
 
+//TODO Move to Models
 data class PreviewCardData(
     val boardName: String,
     val boardOwner: String,
@@ -30,31 +31,29 @@ data class PreviewCardData(
 
 @Composable
 fun MenuScreen() {
-    MenuTopBar()
-    val testList = mutableListOf(
-        PreviewCardData(
-            "Зачет по программированию",
-            "Егор Спирин", painterResource(R.drawable.sample_avatar), "6:24"
-        ),PreviewCardData(
-            "Заметки по матанализу",
-            "Ваша доска", painterResource(R.drawable.sample_avatar), "вчера в 21:30"
-        ),
-        PreviewCardData(
-            "Наброски дизайна",
-            "Саморожи", painterResource(R.drawable.sample_avatar), "27 октября в 23:40"
-        ),
-    )
+    Scaffold(topBar = { MenuTopBar() }) {
+        val testList = mutableListOf(
+            PreviewCardData(
+                "Зачет по программированию", "Егор Спирин", painterResource(R.drawable.sample_avatar), "6:24"
+            ),
+            PreviewCardData(
+                "Заметки по матанализу", "Ваша доска", painterResource(R.drawable.sample_avatar), "вчера в 21:30"
+            ),
+            PreviewCardData(
+                "Наброски дизайна", "Саморожи", painterResource(R.drawable.sample_avatar), "27 октября в 23:40"
+            ),
+        )
 
-    val scrollState = rememberLazyListState()
-    LazyColumn(modifier = Modifier.fillMaxSize(), state = scrollState)
-    {
-        items(testList) { boardPreview ->
-            BoardPreviewCard(
-                boardPreview.boardName,
-                boardPreview.boardOwner,
-                boardPreview.boardOwnerImage,
-                boardPreview.lastBoardUpdate
-            )
+        val scrollState = rememberLazyListState()
+        LazyColumn(modifier = Modifier.fillMaxSize(), state = scrollState) {
+            items(testList) { boardPreview ->
+                BoardPreviewCard(
+                    boardPreview.boardName,
+                    boardPreview.boardOwner,
+                    boardPreview.boardOwnerImage,
+                    boardPreview.lastBoardUpdate
+                )
+            }
         }
     }
 }
@@ -70,19 +69,22 @@ fun BoardPreviewCard(
         modifier = Modifier.height(67.dp).fillMaxWidth().clickable { print("bebra") },
         verticalArrangement = Arrangement.Center
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
                 text = boardName,
-                modifier = Modifier.padding(start = 17.dp).align(Alignment.CenterStart),
+                modifier = Modifier.padding(start = 17.dp).weight(1f, fill = false),
                 fontSize = 16.sp,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = true,
+                maxLines = 1
             )
             Text(
                 text = lastBoardUpdate,
-                modifier = Modifier.padding(top = 3.dp, end = 20.dp).align(Alignment.CenterEnd),
-                fontSize = 12.sp
+                modifier = Modifier.padding(top = 3.dp, end = 20.dp),
+                fontSize = 12.sp,
             )
         }
-        Spacer(modifier = Modifier.padding(top = 4.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
             boardOwnerImage?.let {
                 Image(
@@ -93,9 +95,12 @@ fun BoardPreviewCard(
             }
             Text(
                 boardOwner,
-                modifier = Modifier.padding(start = (if (boardOwnerImage == null) 16.dp else 6.dp)),
+                modifier = Modifier.padding(start = (if (boardOwnerImage == null) 16.dp else 6.dp), end = 19.dp),
                 color = MaterialTheme.colors.onBackground.copy(alpha = 0.6f),
                 fontSize = 14.sp,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = true,
+                maxLines = 1
             )
         }
     }
@@ -104,29 +109,22 @@ fun BoardPreviewCard(
 
 @Composable
 fun MenuTopBar() {
-    Box(
-        modifier = Modifier.fillMaxWidth().height(56.dp),
-    ) {
-        IconButton(
-            onClick = { print("Bebra") },
-        )
-        {
-            Icon(
-                Icons.Default.Add,
-                contentDescription = "plus sign",
-                modifier = Modifier.align(Alignment.Center).padding(start = 4.dp)
+    TopAppBar(title = {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            Image(
+                painter = painterResource(R.drawable.logo),
+                contentDescription = "logo",
+                modifier = Modifier.height(24.dp),
             )
         }
-        Image(
-            painter = painterResource(R.drawable.logo),
-            contentDescription = "logo",
-            modifier = Modifier.height(24.dp).align(Alignment.Center),
-        )
+    }, navigationIcon = {
         IconButton(
             onClick = { print("Bebra") },
-            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 9.dp)
-        )
-        {
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "plus sign")
+        }
+    }, actions = {
+        IconButton(onClick = { print("Bebra") }) {
             Image(
                 painterResource(R.drawable.sample_avatar),
                 contentDescription = "sample avatar",
@@ -135,5 +133,6 @@ fun MenuTopBar() {
                 )
             )
         }
-    }
+    }, backgroundColor = MaterialTheme.colors.background
+    )
 }
