@@ -15,6 +15,7 @@ dependencies {
     implementation("com.google.android.material:material:1.4.0")
     implementation("androidx.appcompat:appcompat:1.4.0")
     implementation("androidx.activity:activity-compose:1.4.0")
+    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.20.2")
 
     val composeVersion: String by project
     implementation("androidx.compose.material:material:$composeVersion")
