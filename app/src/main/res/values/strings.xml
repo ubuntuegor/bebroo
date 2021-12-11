@@ -7,4 +7,7 @@
     <string name="enter_with_google">Войти через Google</string>
     <string name="register">Регистрация</string>
     <string name="nickname">Отображаемое имя</string>
+    <string name="interactive_desk_for">Интерактивная доска для</string>
+    <string name="drawing">рисования</string>
+    <string name="together">вместе</string>
 </resources>

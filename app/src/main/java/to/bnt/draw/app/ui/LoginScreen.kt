@@ -26,6 +26,7 @@ import to.bnt.draw.app.R
 import to.bnt.draw.app.theme.Coral
 import to.bnt.draw.app.theme.SuperLightGray
 import to.bnt.draw.app.theme.WhiteSemiTransparent
+import to.bnt.draw.app.theme.BebrooSansFontFamily
 
 @Composable
 fun LoginScreen() {
@@ -100,7 +101,7 @@ fun LoginScreen() {
                 Text(text = stringResource(R.string.enter), fontSize = 18.sp)
             }
         }
-        Divider(color = SuperLightGray,modifier = Modifier.padding(top = 27.dp).padding(horizontal = 22.dp))
+        Divider(color = SuperLightGray, modifier = Modifier.padding(top = 27.dp).padding(horizontal = 22.dp))
         Button(
             onClick = { print("Bebra") },
             modifier = Modifier.padding(top = 26.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
@@ -134,14 +135,18 @@ fun LoginScreen() {
             {
                 Text(
                     text = buildAnnotatedString {
-                        append("Интерактивная доска для\nрисования")
+                        append(stringResource(R.string.interactive_desk_for))
+                        append("\n")
+                        append(stringResource(R.string.drawing))
+                        append(" ")
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Coral)) {
-                            append(" вместе")
+                            append(stringResource(R.string.together))
                         }
                     },
                     modifier = Modifier.align(Alignment.Center),
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = BebrooSansFontFamily
                 )
             }
         }

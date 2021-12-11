@@ -29,7 +29,7 @@ val Typography = Typography(
     */
 )
 
-val fonts =
+val BebrooSansFontFamily =
     FontFamily(
         Font(R.font.bebroosans_regular),
         Font(R.font.bebroosans_extrabold, weight = FontWeight.ExtraBold),
