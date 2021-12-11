@@ -9,21 +9,29 @@ import android.graphics.Path
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import java.util.*
 
 
 @Composable
-fun Desk() {
+fun Desk(
+    paddingValues: PaddingValues
+) {
     val context = LocalContext.current
-    AndroidView({ MySurfaceView(context)})
+    AndroidView(
+        factory = { MySurfaceView(context) },
+        modifier = Modifier.padding(paddingValues)
+    )
 }
 
 class MySurfaceView(context: Context?) : SurfaceView(context) {
     var path: Path? = null
-    var surfaceHolder: SurfaceHolder
+    var surfaceHolder: SurfaceHolder = holder
 
     @Volatile
     var running = false
@@ -31,10 +39,11 @@ class MySurfaceView(context: Context?) : SurfaceView(context) {
     var random: Random? = null
 
     init {
-        surfaceHolder = holder
+       // this.setBackgroundColor(Color.RED)
+        surfaceHolder
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 3F
-        paint.color = Color.WHITE
+        paint.strokeWidth = 10F
+        paint.color = Color.GREEN
     }
 
     @SuppressLint("ClickableViewAccessibility")
