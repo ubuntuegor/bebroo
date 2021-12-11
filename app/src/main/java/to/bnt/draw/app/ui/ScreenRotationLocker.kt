@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 
+//TODO check the need to transfer to Model
 @Composable
 fun LockScreenOrientation(orientation: Int) {
     val context = LocalContext.current
