@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import to.bnt.draw.app.R
 import to.bnt.draw.app.theme.Coral
+import to.bnt.draw.app.theme.SuperLightGray
 import to.bnt.draw.app.theme.WhiteSemiTransparent
 
 @Composable
@@ -99,7 +100,7 @@ fun LoginScreen() {
                 Text(text = stringResource(R.string.enter), fontSize = 18.sp)
             }
         }
-        Divider(modifier = Modifier.padding(top = 27.dp).padding(horizontal = 22.dp))
+        Divider(color = SuperLightGray,modifier = Modifier.padding(top = 27.dp).padding(horizontal = 22.dp))
         Button(
             onClick = { print("Bebra") },
             modifier = Modifier.padding(top = 26.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),

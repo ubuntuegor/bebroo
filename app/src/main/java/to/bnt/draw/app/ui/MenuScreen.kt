@@ -13,13 +13,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import to.bnt.draw.app.R
+import to.bnt.draw.app.theme.SuperLightGray
 
 //TODO Move to Models
 data class PreviewCardData(
@@ -104,7 +104,7 @@ fun BoardPreviewCard(
             )
         }
     }
-    Divider(color = Color(0.132f, 0.132f, 0.132f, 0.08f))
+    Divider(color = SuperLightGray)
 }
 
 @Composable
