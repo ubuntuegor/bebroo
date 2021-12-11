@@ -1,5 +1,6 @@
 package to.bnt.draw.app.ui
 
+import android.content.pm.ActivityInfo
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,6 +31,7 @@ import to.bnt.draw.app.theme.BebrooSansFontFamily
 
 @Composable
 fun LoginScreen() {
+    LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     Column {
         Image(
             painter = painterResource(R.drawable.logo),
