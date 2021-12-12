@@ -6,18 +6,24 @@ class DrawingBoard(private val canvas: SharedCanvas) {
     }
 
     private var isMouseDown = false
+    private val line = mutableListOf<Point>()
+    val paint = Paint(strokeWidth = 15.0, strokeColor = "#93faa5")
 
     fun onMouseDown(point: Point) {
         isMouseDown = true
-        canvas.drawCircle(point, 10.0, Paint("#ee1111"))
+        line.clear()
     }
 
     fun onMouseMove(point: Point) {
-        if (isMouseDown)
-            canvas.drawCircle(point, 10.0, Paint("#ee1111"))
+        if (isMouseDown) {
+            line.add(point)
+            canvas.drawLine(line, paint)
+        }
     }
 
     fun onMouseUp(point: Point) {
+        line.add(point)
+        canvas.drawLine(line, paint)
         isMouseDown = false
     }
 }
