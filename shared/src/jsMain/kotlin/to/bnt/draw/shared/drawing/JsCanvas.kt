@@ -30,6 +30,19 @@ class JsCanvas(id: String) : SharedCanvas {
         })
     }
 
+    override fun drawLine(points: List<Point>, paint: Paint) {
+        ctx.fillStyle = paint.fillColor
+        ctx.strokeStyle = paint.strokeColor
+        ctx.lineWidth = paint.strokeWidth
+        ctx.beginPath()
+        points.firstOrNull()?.let { ctx.moveTo(it.x, it.y) }
+        for (point in points) {
+            ctx.lineTo(point.x, point.y)
+        }
+        ctx.stroke()
+        ctx.closePath()
+    }
+
     override fun drawCircle(center: Point, radius: Double, paint: Paint) {
         ctx.fillStyle = paint.fillColor
         ctx.strokeStyle = paint.strokeColor
