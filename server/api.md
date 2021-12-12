@@ -20,8 +20,18 @@ Token structure:
 
 ### Google OAuth
 
+#### Web
 Open a popup navigating to `/api/auth/googleAuthorize`. After the login prompt, the token will be sent to the window that opened
 the login popup ([reference](src/main/resources/templates/googleOAuthSuccess.ftl)).
+
+#### Android
+`POST /api/auth/googleIdToken`
+
+- `idToken`: `String` - the id token from Google Sign-In
+
+**Response**:
+
+- `token`: `String`
 
 ### Authentication
 
@@ -77,7 +87,8 @@ empty
 - `Board[]`:
     - `uuid`: `String`
     - `name`: `String`
-    - `lastOpened`: `int` — timestamp
+    - `isPublic`: `bool`
+    - `lastOpened`: `Long` — timestamp
     - `creator`: `User`:
         - `id`: `int`
         - `displayName`: `String`
@@ -87,14 +98,14 @@ empty
 
 `GET /api/board/{uuid}` — open a board (unless another's private)
 
-- `fields`: `String` — comma-separated list of returned fields: `name`, `private`, `creator`, `contributors`
-  , `figures` (default: `name`)
+- `showContributors`: `bool?` — default: false
+- `showFigures`: `bool?` — default: false
 
 **Response**:
 
 - `uuid`: `String`
 - `name`: `String`
-- `private`: `bool`
+- `isPublic`: `bool`
 - `creator`: `User`:
     - `id`: `int`
     - `displayName`: `String`
@@ -114,7 +125,7 @@ empty
 `PATCH /api/board/{uuid}` — modify a board
 
 - `name`: `String?`
-- `private`: `bool?`
+- `isPublic`: `bool?`
 
 **Response**: empty
 
@@ -139,9 +150,9 @@ Communication using JSON
 
 **Message types**:
 
-- New figure
-    - `action`: `addFigure`
-    - `figure`: `Figure`
+- New figures
+    - `action`: `addFigures`
+    - `figures`: `Figure[]`
 - Remove figure
     - `action`: `removeFigure`
     - `figureId`: `int`

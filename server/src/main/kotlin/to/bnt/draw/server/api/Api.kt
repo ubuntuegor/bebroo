@@ -7,15 +7,18 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.features.*
+import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.serialization.*
+import io.ktor.websocket.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
-import to.bnt.draw.server.api.auth.*
 import to.bnt.draw.server.api.exceptions.ApiException
-import to.bnt.draw.server.api.users.*
+import to.bnt.draw.server.api.auth.*
+import to.bnt.draw.server.api.board.*
+import to.bnt.draw.server.api.user.*
 import to.bnt.draw.server.models.*
 
 val httpClient = HttpClient(CIO) {
@@ -54,16 +57,32 @@ fun Application.api(testing: Boolean = false) {
         }
     }
 
+    install(WebSockets)
+
     routing {
         route("/api") {
             route("/auth") {
                 login()
                 signup()
                 googleOAuth()
+                googleIdToken()
             }
             route("/user") {
                 getCurrentUser()
                 modifyCurrentUser()
+            }
+            route("/board") {
+                listBoards()
+                openBoard()
+                modifyBoard()
+                createBoard()
+                boardWebSocket()
+            }
+            route("/{...}") {
+                // 404 override
+                get {
+                    call.respondText("Not Found", status = HttpStatusCode.NotFound)
+                }
             }
         }
     }

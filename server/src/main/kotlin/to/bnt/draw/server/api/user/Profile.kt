@@ -1,4 +1,4 @@
-package to.bnt.draw.server.api.users
+package to.bnt.draw.server.api.user
 
 import io.ktor.application.*
 import io.ktor.auth.*
@@ -19,11 +19,11 @@ fun Route.getCurrentUser() {
         get("/me") {
             val userId =
                 call.principal<JWTPrincipal>()?.payload?.getClaim("id")?.asInt() ?: throw InvalidTokenException()
-            val user = transaction {
+            val response = transaction {
                 val user = Users.select { Users.id eq userId }.first()
                 User(user[Users.id].value, user[Users.displayName], user[Users.avatarUrl])
             }
-            call.respond(user)
+            call.respond(response)
         }
     }
 }
@@ -35,10 +35,10 @@ fun Route.modifyCurrentUser() {
                 call.principal<JWTPrincipal>()?.payload?.getClaim("id")?.asInt() ?: throw InvalidTokenException()
             val parameters = call.receiveParameters()
             transaction {
-                if (parameters.contains("displayName")) {
-                    if (parameters["displayName"]!!.isEmpty()) throw ApiException("Поля не могут быть пустыми")
-                    Users.update({ Users.id eq userId }) {
-                        it[displayName] = parameters["displayName"]!!
+                Users.update({ Users.id eq userId }) {
+                    parameters["displayName"]?.let { field ->
+                        if (field.isEmpty()) throw ApiException("Поля не могут быть пустыми")
+                        it[displayName] = field
                     }
                 }
             }

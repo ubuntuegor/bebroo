@@ -22,6 +22,7 @@ dependencies {
     implementation("io.ktor:ktor-freemarker:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-serialization:$ktorVersion")
+    implementation("io.ktor:ktor-websockets:$ktorVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
     implementation("ch.qos.logback:logback-classic:1.2.7")
     implementation("org.postgresql:postgresql:42.3.1")
@@ -29,6 +30,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+    implementation("com.google.api-client:google-api-client:1.32.2")
 }
 
 tasks.test {

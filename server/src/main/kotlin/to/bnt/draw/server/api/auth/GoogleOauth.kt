@@ -1,10 +1,14 @@
 package to.bnt.draw.server.api.auth
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
+import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.json.gson.GsonFactory
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.client.request.*
 import io.ktor.freemarker.*
 import io.ktor.http.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.serialization.Serializable
@@ -12,8 +16,11 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
+import to.bnt.draw.server.api.exceptions.ApiException
+import to.bnt.draw.server.api.exceptions.MissingParameterException
 import to.bnt.draw.server.api.httpClient
 import to.bnt.draw.server.models.Users
+
 
 fun Authentication.Configuration.googleOauth(environment: ApplicationEnvironment) {
     oauth("google-oauth") {
@@ -93,5 +100,42 @@ fun Route.googleOAuth() {
                 )
             )
         }
+    }
+}
+
+fun Route.googleIdToken() {
+    val verifier = GoogleIdTokenVerifier.Builder(
+        NetHttpTransport(),
+        GsonFactory.getDefaultInstance()
+    ).setAudience(listOf(System.getenv("GOOGLE_CLIENT_ID"))).build()
+
+
+    post("/googleIdToken") {
+        val parameters = call.receiveParameters()
+        val idTokenString = parameters["idToken"] ?: throw MissingParameterException("idToken")
+
+        val idToken = verifier.verify(idTokenString)
+
+        idToken?.let {
+            val payload = idToken.payload
+
+            val userId = transaction {
+                val user = Users.select { Users.googleId eq payload.subject }.firstOrNull()
+                user?.let {
+                    Users.update({ Users.googleId eq payload.subject }) {
+                        it[displayName] = payload["name"] as String
+                        it[avatarUrl] = payload["picture"] as String
+                    }
+                    user[Users.id].value
+                } ?: Users.insertAndGetId {
+                    it[googleId] = payload.subject
+                    it[displayName] = payload["name"] as String
+                    it[avatarUrl] = payload["picture"] as String
+                }.value
+            }
+
+            val token = createToken(application.environment, userId)
+            call.respond(mapOf("token" to token))
+        } ?: throw ApiException("Не удалось верифицировать токен")
     }
 }
