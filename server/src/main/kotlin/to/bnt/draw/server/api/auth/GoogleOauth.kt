@@ -63,6 +63,7 @@ fun Route.googleOAuth() {
 
         get("/googleCallback") {
             val principal: OAuthAccessTokenResponse.OAuth2? = call.principal()
+            val targetOrigin = application.environment.config.property("googleOAuth.targetOrigin").getString()
             principal?.let {
                 val oauthToken = principal.accessToken
                 val googleInfo = getGoogleInfo(oauthToken)
@@ -83,7 +84,6 @@ fun Route.googleOAuth() {
                 }
 
                 val token = createToken(application.environment, userId)
-                val targetOrigin = application.environment.config.property("googleOAuth.targetOrigin").getString()
                 call.respond(
                     FreeMarkerContent(
                         "googleOAuthSuccess.ftl",
@@ -96,7 +96,10 @@ fun Route.googleOAuth() {
             } ?: call.respond(
                 FreeMarkerContent(
                     "googleOAuthError.ftl",
-                    mapOf("errorText" to "Не удалось выполнить вход")
+                    mapOf(
+                        "errorText" to "Не удалось выполнить вход",
+                        "targetOrigin" to targetOrigin
+                    )
                 )
             )
         }
