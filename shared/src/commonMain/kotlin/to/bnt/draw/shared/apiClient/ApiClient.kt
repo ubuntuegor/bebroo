@@ -3,19 +3,23 @@ package to.bnt.draw.shared.apiClient
 import io.ktor.client.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
+import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import to.bnt.draw.shared.apiClient.exceptions.ApiException
 import to.bnt.draw.shared.apiClient.exceptions.InvalidTokenException
+import to.bnt.draw.shared.apiClient.exceptions.RequestErrorException
 import to.bnt.draw.shared.apiClient.exceptions.UnexpectedServerErrorException
 import to.bnt.draw.shared.structures.Board
 import to.bnt.draw.shared.structures.User
 
-open class ApiClient(private val apiUrl: String, var token: String? = null) {
+class ApiClient(internal val apiUrl: String, var token: String? = null) {
     private val client = HttpClient {
-        install(JsonFeature)
+        install(JsonFeature) {
+            serializer = KotlinxSerializer()
+        }
         HttpResponseValidator {
             handleResponseException { exception ->
                 when (exception) {
@@ -26,18 +30,19 @@ open class ApiClient(private val apiUrl: String, var token: String? = null) {
                     is ServerResponseException -> {
                         throw UnexpectedServerErrorException()
                     }
+                    else -> throw RequestErrorException()
                 }
             }
         }
     }
 
-    fun HttpRequestBuilder.appendToken() {
+    private fun HttpRequestBuilder.appendToken() {
         token?.let {
             header("Authorization", "Bearer $it")
         }
     }
 
-    private val authEndpoint = "/auth"
+    internal val authEndpoint = "/auth"
 
     suspend fun signup(username: String, password: String, displayName: String): String {
         val endpoint = "$authEndpoint/signup"
