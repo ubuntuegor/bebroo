@@ -52,7 +52,7 @@ val authPage = fc<Props> {
             justifyContent = JustifyContent.center
         }
 
-        img("Bebroo Logo", "/images/logo.svg") {
+        img("Bebroo Logo", "/assets/images/logo.svg") {
             attrs.height = "37px"
             attrs.draggable = Draggable.htmlFalse
         }
@@ -231,7 +231,7 @@ val authenticationForm = fc<Props> {
                 onClick = handleGoogleOAuth
             }
 
-            styledImg("Google", "/images/google_logo.svg") {
+            styledImg("Google", "/assets/images/google_logo.svg") {
                 css {
                     marginRight = 17.px
                     verticalAlign = VerticalAlign.middle
@@ -251,7 +251,7 @@ val banner = fc<Props> {
         css {
             width = 58.pct
             height = 536.px
-            backgroundImage = Image("url(\"/images/icon_epic.png\")")
+            backgroundImage = Image("url(\"/assets/images/icon_epic.png\")")
             backgroundRepeat = BackgroundRepeat.noRepeat
             backgroundPosition = "left 63px center"
             backgroundSize = "contain"
@@ -264,7 +264,7 @@ val banner = fc<Props> {
                 alignItems = Align.flexStart
                 marginTop = 100.px
                 userSelect = UserSelect.none
-                fontFamily = "\"Bebroo Sans\", sans-serif"
+                fontFamily = "\"Bebroo Sans\", ${Styles.defaultFontFamily}"
                 fontWeight = FontWeight.w600
                 fontSize = 64.px
                 color = Color("#2d2d2d")
