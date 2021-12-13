@@ -148,8 +148,8 @@ val globalStyles = CssBuilder(allowClasses = false).apply {
         fontStyle = FontStyle.normal
         put(
             "src",
-            "url(\"/fonts/BebrooSans-Bold.woff2\") format(\"woff2\")," +
-                    "url(\"/fonts/BebrooSans-Bold.otf\") format(\"otf\")"
+            "url(\"/assets/fonts/BebrooSans-Bold.woff2\") format(\"woff2\")," +
+                    "url(\"/assets/fonts/BebrooSans-Bold.otf\") format(\"otf\")"
         )
     }
 
@@ -159,8 +159,8 @@ val globalStyles = CssBuilder(allowClasses = false).apply {
         fontStyle = FontStyle.normal
         put(
             "src",
-            "url(\"/fonts/BebrooSans-SemiBold.woff2\") format(\"woff2\")," +
-                    "url(\"/fonts/BebrooSans-SemiBold.otf\") format(\"otf\")"
+            "url(\"/assets/fonts/BebrooSans-SemiBold.woff2\") format(\"woff2\")," +
+                    "url(\"/assets/fonts/BebrooSans-SemiBold.otf\") format(\"otf\")"
         )
     }
 }
