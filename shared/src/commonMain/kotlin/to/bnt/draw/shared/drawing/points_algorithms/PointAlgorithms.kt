@@ -70,7 +70,7 @@ private fun calculateIntervalDistribution(firstPoint: Double, secondPoint: Doubl
     return intervalDistribution
 }
 
-private fun calculateCatmullRollSplinePoints(spline: Spline, chainPointsCount: Long): List<Point> {
+private fun calculateCatmullRollSplinePoints(spline: Spline, distributionSegmentsCount: Long): List<Point> {
     val points = spline.getPoints()
     val tList = mutableListOf(0.0)
     for (i in 0..2) {
@@ -78,7 +78,7 @@ private fun calculateCatmullRollSplinePoints(spline: Spline, chainPointsCount: L
     }
 
     val splinePoints = mutableListOf<Point>()
-    val intervalDistribution = calculateIntervalDistribution(tList[1], tList[2],  chainPointsCount)
+    val intervalDistribution = calculateIntervalDistribution(tList[1], tList[2],  distributionSegmentsCount)
     intervalDistribution.forEach { tCoefficient -> splinePoints.add(
         calculateCatmullRollPoint(tList, points, tCoefficient)
     ) }
@@ -86,7 +86,7 @@ private fun calculateCatmullRollSplinePoints(spline: Spline, chainPointsCount: L
     return splinePoints
 }
 
-fun calculateCatmullRollChainPoints(pivotPoints: List<Point>, chainPointsCount: Long): List<Point> {
+private fun calculateCatmullRollCurvePoints(pivotPoints: List<Point>, distributionSegmentsCount: Long): List<Point> {
     val chainPoints = mutableListOf<Point>()
     for (i in 0 until (pivotPoints.count() - 3)) {
         val currentSpline = Spline(
@@ -95,8 +95,27 @@ fun calculateCatmullRollChainPoints(pivotPoints: List<Point>, chainPointsCount: 
             pivotPoints[i + 2],
             pivotPoints[i + 3]
         )
-        chainPoints.addAll(calculateCatmullRollSplinePoints(currentSpline, chainPointsCount))
+        chainPoints.addAll(calculateCatmullRollSplinePoints(currentSpline, distributionSegmentsCount))
     }
 
     return chainPoints
+}
+
+private fun findContinuationPoint(fromPoint: Point, toPoint: Point) = toPoint + fromPoint.getVectorTo(toPoint)
+
+fun calculateCurvePoints(pivotPoints: List<Point>, distributionSegmentsCount: Long): List<Point> {
+    if (pivotPoints.count() < 2) return emptyList()
+
+    val firstPoint = pivotPoints.first()
+    val secondPoint = pivotPoints[1]
+    val preLastPoint = pivotPoints[pivotPoints.lastIndex - 1]
+    val lastPoint = pivotPoints.last()
+
+    val firstPointContinuation = findContinuationPoint(secondPoint, firstPoint)
+    val lastPointContinuation = findContinuationPoint(preLastPoint, lastPoint)
+    val augmentedPivotPoints = pivotPoints.toMutableList()
+    augmentedPivotPoints.add(0, firstPointContinuation)
+    augmentedPivotPoints.add(lastPointContinuation)
+
+    return calculateCatmullRollCurvePoints(augmentedPivotPoints, distributionSegmentsCount)
 }
