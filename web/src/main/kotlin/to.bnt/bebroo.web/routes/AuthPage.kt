@@ -1,5 +1,6 @@
 package to.bnt.bebroo.web.routes
 
+import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.await
@@ -18,6 +19,7 @@ import react.fc
 import react.router.dom.Redirect
 import react.router.dom.useHistory
 import react.router.dom.useLocation
+import react.useEffectOnce
 import react.useState
 import styled.*
 import to.bnt.bebroo.web.Config
@@ -43,6 +45,10 @@ val authPage = fc<Props> {
         return@fc
     }
 
+    useEffectOnce {
+        document.title = "Вход - ${Config.APP_NAME}"
+    }
+
     styledHeader {
         css {
             +Styles.container
@@ -52,7 +58,7 @@ val authPage = fc<Props> {
             justifyContent = JustifyContent.center
         }
 
-        img("Bebroo Logo", "/images/logo.svg") {
+        img("${Config.APP_NAME} Logo", "/images/logo.svg") {
             attrs.height = "37px"
             attrs.draggable = Draggable.htmlFalse
         }

@@ -1,5 +1,6 @@
 package to.bnt.bebroo.web.routes
 
+import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -34,6 +35,7 @@ val homePage = fc<Props> {
     }
 
     useEffectOnce {
+        document.title = Config.APP_NAME
         val token = window.localStorage.getItem("token")
         token?.let {
             client.token = token
