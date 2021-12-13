@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import to.bnt.draw.app.R
 import to.bnt.draw.app.theme.SuperLightGray
 
@@ -30,7 +31,7 @@ data class PreviewCardData(
 )
 
 @Composable
-fun MenuScreen() {
+fun MenuScreen(navController: NavController) {
     Scaffold(topBar = { MenuTopBar() }) {
         val testList = mutableListOf(
             PreviewCardData(
@@ -48,6 +49,9 @@ fun MenuScreen() {
         LazyColumn(modifier = Modifier.fillMaxSize(), state = scrollState) {
             items(testList) { boardPreview ->
                 BoardPreviewCard(
+                    navController,
+                    //TODO setBoardId
+                    "5005",
                     boardPreview.boardName,
                     boardPreview.boardOwner,
                     boardPreview.boardOwnerImage,
@@ -60,13 +64,17 @@ fun MenuScreen() {
 
 @Composable
 fun BoardPreviewCard(
+    navController: NavController,
+    boardID: String,
     boardName: String,
     boardOwner: String,
     boardOwnerImage: Painter?,
     lastBoardUpdate: String,
 ) {
     Column(
-        modifier = Modifier.height(67.dp).fillMaxWidth().clickable { print("bebra") },
+        modifier = Modifier.height(67.dp).fillMaxWidth().clickable {
+            navController.navigate("board/${boardID}")
+        },
         verticalArrangement = Arrangement.Center
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

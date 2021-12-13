@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import to.bnt.draw.app.R
 import to.bnt.draw.app.theme.Coral
 import to.bnt.draw.app.theme.SuperLightGray
@@ -30,7 +31,7 @@ import to.bnt.draw.app.theme.WhiteSemiTransparent
 import to.bnt.draw.app.theme.BebrooSansFontFamily
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(navController: NavController) {
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
     Column {
         Image(
@@ -46,6 +47,7 @@ fun LoginScreen() {
                 onValueChange = { nickname = it },
                 modifier = Modifier.padding(top = 40.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
                 label = { Text(stringResource(R.string.nickname)) },
+                singleLine = true,
                 shape = CircleShape,
             )
         }
@@ -56,6 +58,7 @@ fun LoginScreen() {
             modifier = Modifier.padding(top = (14 + if (!isRegisterButtonClicked) 26 else 0).dp)
                 .padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
             label = { Text(stringResource(R.string.login)) },
+            singleLine = true,
             shape = CircleShape,
         )
         var password by remember { mutableStateOf("") }
@@ -66,11 +69,16 @@ fun LoginScreen() {
             label = { Text(stringResource(R.string.password)) },
             shape = CircleShape,
             visualTransformation = PasswordVisualTransformation(),
+            singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
         if (!isRegisterButtonClicked) {
             Button(
-                onClick = { print("Bebra") },
+                onClick = {
+                    navController.navigate("menu") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
                 modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
                 elevation = elevation(
                     defaultElevation = 0.dp, pressedElevation = 0.dp
@@ -133,8 +141,7 @@ fun LoginScreen() {
             Box(
                 modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 20.dp, start = 14.dp)
                     .background(WhiteSemiTransparent)
-            )
-            {
+            ) {
                 Text(
                     text = buildAnnotatedString {
                         append(stringResource(R.string.interactive_desk_for))
