@@ -11,13 +11,17 @@ import to.bnt.draw.server.helper.getBoardByUuid
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
-fun Application.main(testing: Boolean = false) {
+fun Application.main() {
+    val developmentMode = environment.config.property("ktor.development").getString().toBoolean()
     val appName = environment.config.property("app.name").getString()
 
     install(FreeMarker) {
         templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
     }
     install(Compression)
+    if (!developmentMode) {
+        install(HttpsRedirect)
+    }
 
     routing {
         static("/assets") {
