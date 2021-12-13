@@ -67,6 +67,17 @@ class ApiClient(internal val apiUrl: String, var token: String? = null) {
         return response["token"] ?: throw ApiException("Ошибка получения токена")
     }
 
+    suspend fun googleOAuthIdToken(idToken: String): String {
+        val endpoint = "$authEndpoint/googleIdToken"
+        val response: Map<String, String> = client.submitForm(apiUrl + endpoint, Parameters.build {
+            append("idToken", idToken)
+        }, false) {
+            method = HttpMethod.Post
+        }
+
+        return response["token"] ?: throw ApiException("Ошибка получения токена")
+    }
+
     private val userEndpoint = "/user"
 
     suspend fun getMe(): User {
