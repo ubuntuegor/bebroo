@@ -1,5 +1,7 @@
 package to.bnt.draw.shared.drawing
 
+import to.bnt.draw.shared.drawing.drawing_structures.Point
+
 class DrawingBoard(private val canvas: SharedCanvas) {
     init {
         canvas.bindEvents(this)

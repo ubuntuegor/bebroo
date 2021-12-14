@@ -1,6 +1,7 @@
 package to.bnt.draw.shared.drawing
 
-data class Point(val x: Double, val y: Double)
+import to.bnt.draw.shared.drawing.drawing_structures.Point
+
 data class Paint(val fillColor: String = "#000000", val strokeColor: String = "#000000", val strokeWidth: Double = .0)
 
 interface SharedCanvas {
