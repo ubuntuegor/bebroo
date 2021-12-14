@@ -1,4 +1,4 @@
-package to.bnt.draw.shared.drawing.points_algorithms
+package to.bnt.draw.shared.drawing.drawing_structures
 
 data class Spline(
     val point0: Point,

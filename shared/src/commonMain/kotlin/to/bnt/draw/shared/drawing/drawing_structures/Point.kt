@@ -1,4 +1,4 @@
-package to.bnt.draw.shared.drawing.points_algorithms
+package to.bnt.draw.shared.drawing.drawing_structures
 
 data class Point(val x: Double, val y: Double) {
     operator fun plus(otherPoint: Point) = Point(x + otherPoint.x, y + otherPoint.y)
