@@ -44,3 +44,9 @@ fun douglasPeuckerAlgorithm(points: List<Point>, epsilon: Double): List<Point> {
 
     return points.filterIndexed { index, _ -> keepPoint[index] }
 }
+
+// Calculates a simplified line with fewer points.
+// The accuracy not worse than epsilon.
+fun simplifyLine(points: List<Point>, epsilon: Double): List<Point> {
+    return douglasPeuckerAlgorithm(points, epsilon)
+}
