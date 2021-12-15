@@ -9,4 +9,6 @@ data class Line(val points: List<Point>) {
 
         return Rectangle(Point(smallestX, biggestY), Point(biggestX, smallestY))
     }
+
+    fun findNearestPointTo(otherPoint: Point) = (points.minOf { it.calculateQuadraticDistanceTo(otherPoint) })
 }

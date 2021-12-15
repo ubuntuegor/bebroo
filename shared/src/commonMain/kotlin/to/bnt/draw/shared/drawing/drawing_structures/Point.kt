@@ -9,4 +9,6 @@ data class Point(val x: Double, val y: Double) {
 
     fun getCoordinates(): Pair<Double, Double> = Pair(x, y)
     fun getVectorTo(toPoint: Point) = toPoint - this
+    fun calculateQuadraticDistanceTo(otherPoint: Point) =
+        (otherPoint.x - x) * (otherPoint.x - x) + (otherPoint.y - y) * (otherPoint.y - y)
 }
