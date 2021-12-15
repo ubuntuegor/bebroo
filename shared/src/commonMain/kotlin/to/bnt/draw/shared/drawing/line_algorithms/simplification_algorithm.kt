@@ -17,7 +17,6 @@ fun douglasPeuckerAlgorithm(line: Line, epsilon: Double): Line {
     val points = line.points
     val indicesStack = ArrayDeque<Pair<Int, Int>>()
     val keepPoint: Array<Boolean> = Array(points.size) { true }
-    val resultPoints = mutableListOf<Point>()
     indicesStack.add(Pair(0, points.lastIndex))
 
     while (!indicesStack.isEmpty()) {
