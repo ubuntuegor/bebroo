@@ -105,7 +105,7 @@ class LineConverterStorage {
         for (lineID in linesID) {
             val simplifiedLine = simplifiedLinesStorage.getLine(lineID)
             simplifiedLine ?: continue
-            smoothedLinesStorage.addLine(lineID, simplifiedLine)
+            addSmoothedLine(lineID, simplifiedLine)
         }
     }
 
