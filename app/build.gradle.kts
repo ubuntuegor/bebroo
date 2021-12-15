@@ -15,14 +15,15 @@ dependencies {
     implementation("com.google.android.material:material:1.4.0")
     implementation("androidx.appcompat:appcompat:1.4.0")
     implementation("androidx.activity:activity-compose:1.4.0")
-    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.20.2")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.20.2")
 
     val composeVersion: String by project
     implementation("androidx.compose.material:material:$composeVersion")
     implementation("androidx.compose.animation:animation:$composeVersion")
     implementation("androidx.compose.ui:ui-tooling:$composeVersion")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.4.0")
+    implementation("androidx.navigation:navigation-compose:2.4.0-beta02")
 
+    implementation ("androidx.datastore:datastore-preferences:1.0.0")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:$composeVersion")
 }
 
