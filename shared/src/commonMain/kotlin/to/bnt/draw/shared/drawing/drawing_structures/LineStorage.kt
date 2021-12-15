@@ -3,10 +3,9 @@ package to.bnt.draw.shared.drawing.drawing_structures
 class LineStorage {
     private val storage = mutableMapOf<Long, Line>()
 
-    fun addLine(lineID: Long, line: Line): Long {
+    fun addLine(lineID: Long, line: Line): Line {
         storage[lineID] = line
-
-        return lineID
+        return line
     }
 
     fun removeLine(lineID: Long): Line? = storage.remove(lineID)
