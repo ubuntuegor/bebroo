@@ -4,6 +4,7 @@ import kotlinx.browser.document
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.events.MouseEvent
+import org.w3c.dom.events.WheelEvent
 import to.bnt.draw.shared.drawing.drawing_structures.Point
 import kotlin.math.PI
 
@@ -28,6 +29,10 @@ class JsCanvas(id: String) : SharedCanvas {
         canvasElement.addEventListener("mouseup", { event ->
             event as MouseEvent
             board.onMouseUp(Point(event.offsetX, event.offsetY))
+        })
+        canvasElement.addEventListener("wheel", { event ->
+            event as WheelEvent
+            board.onMouseWheel(event.deltaMode)
         })
     }
 
