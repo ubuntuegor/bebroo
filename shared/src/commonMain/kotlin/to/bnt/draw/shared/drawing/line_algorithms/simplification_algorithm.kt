@@ -1,5 +1,7 @@
 package to.bnt.draw.shared.drawing.points_algorithms
 
+import to.bnt.draw.shared.drawing.drawing_structures.Line
+import to.bnt.draw.shared.drawing.drawing_structures.Point
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -12,7 +14,7 @@ private fun perpendicularDistance(lineFirstPoint: Point, lineSecondPoint: Point,
 }
 
 fun douglasPeuckerAlgorithm(line: Line, epsilon: Double): Line {
-    val points = line.getPoints()
+    val points = line.points
     val indicesStack = ArrayDeque<Pair<Int, Int>>()
     val keepPoint: Array<Boolean> = Array(points.size) { true }
     val resultPoints = mutableListOf<Point>()

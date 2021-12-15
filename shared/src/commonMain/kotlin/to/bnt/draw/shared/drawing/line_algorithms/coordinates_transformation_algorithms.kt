@@ -1,6 +1,6 @@
 package points_alorithms
 
-import to.bnt.draw.shared.drawing.points_algorithms.Point
+import to.bnt.draw.shared.drawing.drawing_structures.Point
 
 fun convertFromWorldToScreenSystem(
     point: Point,
