@@ -4,6 +4,8 @@ data class Point(val x: Double, val y: Double) {
     operator fun plus(otherPoint: Point) = Point(x + otherPoint.x, y + otherPoint.y)
     operator fun unaryMinus() = Point(-x, -y)
     operator fun minus(otherPoint: Point) = plus(-otherPoint)
+    operator fun times(number: Double) = Point(x * number, y * number)
+    operator fun div(number: Double) = Point(x / number, y / number)
 
     fun getCoordinates(): Pair<Double, Double> = Pair(x, y)
     fun getVectorTo(toPoint: Point) = toPoint - this
