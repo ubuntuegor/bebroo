@@ -27,10 +27,10 @@ class LineConverterStorage {
 
     private val lineExtremeCoordinateComparator = Comparator<LineCoordinate> {
             a, b -> when {
-        a.coordinateValue < b.coordinateValue -> -1
-        a.coordinateValue > b.coordinateValue -> 1
-        else -> 0
-    }
+            a.coordinateValue < b.coordinateValue -> -1
+            a.coordinateValue > b.coordinateValue -> 1
+            else -> 0
+        }
     }
 
     private fun ArrayList<LineCoordinate>.findInsertionIndexByOrder(lineCoordinate: LineCoordinate): Int {
