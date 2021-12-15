@@ -11,7 +11,8 @@ private fun perpendicularDistance(lineFirstPoint: Point, lineSecondPoint: Point,
     return abs(a * point.x + b * point.y + c) / sqrt(a*a + b*b)
 }
 
-fun douglasPeuckerAlgorithm(points: List<Point>, epsilon: Double): List<Point> {
+fun douglasPeuckerAlgorithm(line: Line, epsilon: Double): Line {
+    val points = line.getPoints()
     val indicesStack = ArrayDeque<Pair<Int, Int>>()
     val keepPoint: Array<Boolean> = Array(points.size) { true }
     val resultPoints = mutableListOf<Point>()
@@ -42,11 +43,11 @@ fun douglasPeuckerAlgorithm(points: List<Point>, epsilon: Double): List<Point> {
         }
     }
 
-    return points.filterIndexed { index, _ -> keepPoint[index] }
+    return Line(points.filterIndexed { index, _ -> keepPoint[index] })
 }
 
 // Calculates a simplified line with fewer points.
 // The accuracy not worse than epsilon.
-fun simplifyLine(points: List<Point>, epsilon: Double): List<Point> {
-    return douglasPeuckerAlgorithm(points, epsilon)
+fun simplifyLine(line: Line, epsilon: Double): Line {
+    return douglasPeuckerAlgorithm(line, epsilon)
 }
