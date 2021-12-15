@@ -32,7 +32,7 @@ class JsCanvas(id: String) : SharedCanvas {
         })
         canvasElement.addEventListener("wheel", { event ->
             event as WheelEvent
-            board.onMouseWheel(event.deltaMode)
+            board.onMouseWheel(event.deltaY)
         })
     }
 

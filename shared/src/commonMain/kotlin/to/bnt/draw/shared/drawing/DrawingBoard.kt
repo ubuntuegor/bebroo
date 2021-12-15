@@ -12,7 +12,7 @@ class DrawingBoard(private val canvas: SharedCanvas) {
 
     private var isMouseDown = false
     private val drawingLine = Line()
-    private val convertionStorage = LineConversionStorage()
+    private val conversionStorage = LineConversionStorage(canvas.width, canvas.height)
     private var scaleCoefficient = 1.0
     val paint = Paint(strokeWidth = 1.0, strokeColor = "#fab0be")
 
@@ -22,6 +22,7 @@ class DrawingBoard(private val canvas: SharedCanvas) {
     }
 
     fun onMouseMove(point: Point) {
+        println(point)
         if (isMouseDown) {
             drawingLine.addPoint(point)
         }
@@ -33,39 +34,39 @@ class DrawingBoard(private val canvas: SharedCanvas) {
         drawLine(simplifyLine(drawingLine, SIMPLIFICATION_EPSILON))
     }
 
-    private fun calculateScaleCoefficient(wheelDelta: Int): Double {
-        return scaleCoefficient * wheelDelta * WHEEL_DELTA_FACTOR
+    private fun calculateScaleCoefficient(wheelDelta: Double): Double {
+        val scaleDelta = if (wheelDelta >= 0) 1.0 / wheelDelta else -wheelDelta
+        return scaleDelta * wheelDelta * WHEEL_DELTA_FACTOR
     }
 
-    fun onMouseWheel(wheelDelta: Int) {
+    fun onMouseWheel(wheelDelta: Double) {
         changeScaleCoefficient(calculateScaleCoefficient(wheelDelta))
-        redrawLines()
     }
 
     fun drawLine(simplifiedLine: Line) {
-        canvas.drawLine(convertionStorage.addLine(simplifiedLine).points, paint)
+        canvas.drawLine(conversionStorage.addLine(simplifiedLine).points, paint)
     }
 
     private fun redrawLines() {
         canvas.clear()
-        convertionStorage.getDisplayingLines().forEach { canvas.drawLine(it.points, paint) }
+        conversionStorage.getDisplayingLines().forEach { canvas.drawLine(it.points, paint) }
     }
 
     fun clearLineAtPoint(point: Point) {
         canvas.clear()
-        convertionStorage.removeLineAtPoint(point)
+        conversionStorage.removeLineAtPoint(point)
         redrawLines()
     }
 
     private fun changeScaleCoefficient(scaleCoefficient: Double) {
         if (scaleCoefficient <= 0) return
-        convertionStorage.changeScaleCoefficient(scaleCoefficient)
+        conversionStorage.changeScaleCoefficient(scaleCoefficient)
         this.scaleCoefficient = scaleCoefficient
         redrawLines()
     }
 
     companion object {
         private const val SIMPLIFICATION_EPSILON = 2.0
-        private const val WHEEL_DELTA_FACTOR = 0.1
+        private const val WHEEL_DELTA_FACTOR = 0.01
     }
 }

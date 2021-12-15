@@ -1,5 +1,8 @@
 package to.bnt.draw.shared.drawing.drawing_structures
 
+import points_alorithms.convertLineFromScreenToWorldSystem
+import points_alorithms.convertLineFromWorldToScreenSystem
+import points_alorithms.convertPointFromScreenToWorldSystem
 import to.bnt.draw.shared.drawing.points_algorithms.smoothLine
 
 private data class LineCoordinate(val lineID: Long, val coordinateValue: Double)
@@ -166,7 +169,7 @@ private class LineRectanglesStorage {
 
 }
 
-class LineConversionStorage {
+class LineConversionStorage(private var screenWidth: Int, private var screenHeight: Int) {
     companion object {
         const val DEFAULT_DISTRIBUTION_SEGMENTS_COUNT = 100L
         const val POINTER_AREA_EPSILON = 10.0
@@ -180,6 +183,7 @@ class LineConversionStorage {
     private var idCounter = 0L
 
     private var scaleCoefficient: Double = 1.0
+    private var originPosition = Point(0.0, 0.0)
 
     private fun calculateLineID() = idCounter.also { ++idCounter }
 
@@ -189,28 +193,69 @@ class LineConversionStorage {
         return segmentsCount
     }
 
-    private fun addSmoothedLine(lineID: Long, simplifiedLine: Line): Line {
+    private fun addLineWithSmooth(lineID: Long, simplifiedLine: Line): Line {
         val smoothedLine =
             smoothLine(simplifiedLine, findDistributionSegmentsCount())
         return smoothedLinesStorage.addLine(lineID, smoothedLine)
     }
 
-    private fun recalculateSmoothedLines() {
+    private fun recalculateDisplayingLines() {
         smoothedLinesStorage = LineStorage()
         for (lineID in linesID) {
             val simplifiedLine = simplifiedLinesStorage.getLine(lineID)
             simplifiedLine ?: continue
-            addSmoothedLine(lineID, simplifiedLine)
+            addLineWithSmooth(lineID, simplifiedLine)
         }
     }
 
+    private fun convertPointFromScreenToWorldSystem(point: Point) =
+        convertPointFromScreenToWorldSystem(
+            point,
+            originPosition,
+            scaleCoefficient,
+            screenWidth.toDouble(),
+            screenHeight.toDouble()
+        )
+
+    private fun convertLineFromScreenToWorldSystem(line: Line) =
+        convertLineFromScreenToWorldSystem(
+            line,
+            originPosition,
+            scaleCoefficient,
+            screenWidth.toDouble(),
+            screenHeight.toDouble()
+        )
+
+    private fun convertLineFromWorldToScreenSystem(line: Line) =
+        convertLineFromWorldToScreenSystem(
+            line,
+            originPosition,
+            scaleCoefficient,
+            screenWidth.toDouble(),
+            screenHeight.toDouble()
+        )
+
     fun addLine(simplifiedLine: Line): Line {
         val lineID = calculateLineID()
-        simplifiedLinesStorage.addLine(lineID, simplifiedLine)
-        val smoothedLine = addSmoothedLine(lineID, simplifiedLine)
-        rectanglesStorage.addRectangle(lineID, smoothedLine.findContainingRectangle())
+        val simplifiedLineInWorldSystem =
+            simplifiedLinesStorage.addLine(
+                lineID,
+                this.convertLineFromScreenToWorldSystem(simplifiedLine)
+            )
+        val smoothedLineInWorldSystem = addLineWithSmooth(
+            lineID,
+            simplifiedLineInWorldSystem
+        )
+        rectanglesStorage.addRectangle(
+            lineID,
+            smoothedLineInWorldSystem.findContainingRectangle()
+        )
         linesID.add(lineID)
-        return smoothedLine
+
+        return smoothLine(
+            simplifiedLine,
+            DEFAULT_DISTRIBUTION_SEGMENTS_COUNT
+        )
     }
 
     fun addAll(lines: List<Line>) = lines.forEach { addLine(it) }
@@ -223,10 +268,11 @@ class LineConversionStorage {
     }
 
     private fun getLineAtPoint(point: Point): Long? {
+        val pointInWorldSystem = this.convertPointFromScreenToWorldSystem(point)
         val areaEpsilonVector = Point(POINTER_AREA_EPSILON, POINTER_AREA_EPSILON)
         val pointRectangle = Rectangle(
-            point - areaEpsilonVector,
-            point + areaEpsilonVector
+            pointInWorldSystem - areaEpsilonVector,
+            pointInWorldSystem + areaEpsilonVector
         )
 
         val suspectedLinesID = rectanglesStorage.getRectanglesWithCommonPart(pointRectangle)
@@ -239,11 +285,28 @@ class LineConversionStorage {
         removeLine(getLineAtPoint(point) ?: return)
     }
 
-    fun getDisplayingLines() = smoothedLinesStorage.getLines()
+    private fun convertDisplayingLinesInScreenSystem(): List<Line> {
+        return smoothedLinesStorage.getLines().map { convertLineFromWorldToScreenSystem(it) }
+    }
+
+    fun getDisplayingLines(): List<Line> {
+        return convertDisplayingLinesInScreenSystem()
+    }
 
     fun changeScaleCoefficient(newScaleCoefficient: Double) {
         if (newScaleCoefficient <= 0.0) return
         scaleCoefficient = newScaleCoefficient
-        recalculateSmoothedLines()
+        recalculateDisplayingLines()
     }
+
+    fun changeScreenSize(newWidth: Int, newHeight: Int) {
+        screenWidth = newWidth
+        screenHeight = newHeight
+    }
+
+    fun changeOriginPosition(point: Point) {
+        originPosition = point
+    }
+
+    //fun scale
 }
