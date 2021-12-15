@@ -1,5 +1,8 @@
 package to.bnt.draw.shared.drawing.points_algorithms
 
+import to.bnt.draw.shared.drawing.drawing_structures.Line
+import to.bnt.draw.shared.drawing.drawing_structures.Point
+import to.bnt.draw.shared.drawing.drawing_structures.Spline
 import kotlin.math.abs
 import kotlin.math.pow
 
@@ -87,7 +90,7 @@ private fun calculateCatmullRomSplinePoints(spline: Spline, distributionSegments
 }
 
 private fun calculateCatmullRomCurvePoints(pivotPointsLine: Line, distributionSegmentsCount: Long): Line {
-    val pivotPoints = pivotPointsLine.getPoints()
+    val pivotPoints = pivotPointsLine.points
     val chainPoints = mutableListOf<Point>()
     for (i in 0 until (pivotPoints.count() - 3)) {
         val currentSpline = Spline(
@@ -106,8 +109,8 @@ private fun findContinuationPoint(fromPoint: Point, toPoint: Point) = toPoint + 
 
 // Calculates a smoothed line through the pivot points with given segments distribution count.
 fun smoothLine(pivotPointsLine: Line, distributionSegmentsCount: Long): Line {
-    val pivotPoints = pivotPointsLine.getPoints()
-    if (pivotPoints.count() < 2) return emptyList()
+    val pivotPoints = pivotPointsLine.points
+    if (pivotPoints.count() < 2) return Line(emptyList())
 
     val firstPoint = pivotPoints.first()
     val secondPoint = pivotPoints[1]
