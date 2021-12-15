@@ -6,14 +6,15 @@ import kotlin.random.Random
 
 class LineConverterStorage {
     companion object {
-        const val DISTRIBUTION_SEGMENTS_COUNT = 100L
+        const val DEFAULT_DISTRIBUTION_SEGMENTS_COUNT = 100L
         const val POINTER_AREA_EPSILON = 10.0
     }
 
+    private data class LineCoordinate(val lineID: Long, val coordinateValue: Double)
+
     private val simplifiedLinesStorage = LineStorage()
     private var smoothedLinesStorage = LineStorage()
-
-    private data class LineCoordinate(val lineID: Long, val coordinateValue: Double)
+    private val linesID = mutableSetOf<Long>()
 
     private var linesSortedByLeftX = arrayListOf<LineCoordinate>()
     private var linesSortedByRightX = arrayListOf<LineCoordinate>()
@@ -23,14 +24,16 @@ class LineConverterStorage {
 
     private var idCounter = 0L
 
+    private var scaleCoefficient: Double = 1.0
+
     private fun calculateLineID() = idCounter.also { ++idCounter }
 
     private val lineExtremeCoordinateComparator = Comparator<LineCoordinate> {
             a, b -> when {
-            a.coordinateValue < b.coordinateValue -> -1
-            a.coordinateValue > b.coordinateValue -> 1
-            else -> 0
-        }
+        a.coordinateValue < b.coordinateValue -> -1
+        a.coordinateValue > b.coordinateValue -> 1
+        else -> 0
+    }
     }
 
     private fun ArrayList<LineCoordinate>.findInsertionIndexByOrder(lineCoordinate: LineCoordinate): Int {
@@ -85,12 +88,33 @@ class LineConverterStorage {
         rectanglesContainingLine.remove(lineID)
     }
 
+    private fun findDistributionSegmentsCount(): Long {
+        var segmentsCount = (DEFAULT_DISTRIBUTION_SEGMENTS_COUNT * scaleCoefficient).toLong()
+        if (segmentsCount == 0L) segmentsCount = 1L
+        return segmentsCount
+    }
+
+    private fun addSmoothedLine(lineID: Long, simplifiedLine: Line): Line {
+        val smoothedLine =
+            smoothLine(simplifiedLine, findDistributionSegmentsCount())
+        return smoothedLinesStorage.addLine(lineID, smoothedLine)
+    }
+
+    private fun recalculateSmoothedLines() {
+        smoothedLinesStorage = LineStorage()
+        for (lineID in linesID) {
+            val simplifiedLine = simplifiedLinesStorage.getLine(lineID)
+            simplifiedLine ?: continue
+            smoothedLinesStorage.addLine(lineID, simplifiedLine)
+        }
+    }
+
     fun addLine(simplifiedLine: Line) {
         val lineID = calculateLineID()
         simplifiedLinesStorage.addLine(lineID, simplifiedLine)
-        val smoothedLine = smoothLine(simplifiedLine, DISTRIBUTION_SEGMENTS_COUNT)
-        smoothedLinesStorage.addLine(lineID, smoothedLine)
+        val smoothedLine = addSmoothedLine(lineID, simplifiedLine)
         sortLineByExtremePoints(smoothedLine, lineID)
+        linesID.add(lineID)
     }
 
     fun addAll(lines: List<Line>) = lines.forEach { addLine(it) }
@@ -99,6 +123,7 @@ class LineConverterStorage {
         simplifiedLinesStorage.removeLine(lineID)
         smoothedLinesStorage.removeLine(lineID)
         removeLineFromSortingStorages(lineID)
+        linesID.remove(lineID)
     }
 
     private fun ArrayList<LineCoordinate>.smallestIndexForCoordinateGreaterThanOrEqual(value: Double): Int {
@@ -172,15 +197,21 @@ class LineConverterStorage {
 
     fun getLineAtPoint(point: Point): Line? {
         val areaEpsilonVector = Point(POINTER_AREA_EPSILON, POINTER_AREA_EPSILON)
-        val pointRectangle = Rectangle(
+        var pointRectangle = Rectangle(
             point - areaEpsilonVector,
             point + areaEpsilonVector
         )
+
         val suspectedLinesID = getRectanglesWithCommonPart(pointRectangle)
         val suspectedLines = suspectedLinesID.map { smoothedLinesStorage.getLine(it) }
         return suspectedLines.minByOrNull { it?.findNearestPointTo(point) ?: Double.POSITIVE_INFINITY }
     }
 
     fun getDisplayingLines() = smoothedLinesStorage.getLines()
-}
 
+    fun changeScaleCoefficient(newScaleCoefficient: Double) {
+        if (newScaleCoefficient <= 0.0) return
+        scaleCoefficient = newScaleCoefficient
+        recalculateSmoothedLines()
+    }
+}
