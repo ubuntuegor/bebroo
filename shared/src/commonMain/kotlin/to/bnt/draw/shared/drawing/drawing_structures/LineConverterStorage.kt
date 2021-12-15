@@ -1,6 +1,5 @@
 package to.bnt.draw.shared.drawing.drawing_structures
 
-import to.bnt.draw.shared.drawing.points_algorithms.Point
 import to.bnt.draw.shared.drawing.points_algorithms.smoothLine
 
 class LineConverterStorage {
