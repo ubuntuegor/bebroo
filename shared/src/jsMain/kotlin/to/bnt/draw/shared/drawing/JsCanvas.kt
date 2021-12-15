@@ -4,6 +4,7 @@ import kotlinx.browser.document
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.events.MouseEvent
+import to.bnt.draw.shared.drawing.drawing_structures.Point
 import kotlin.math.PI
 
 class JsCanvas(id: String) : SharedCanvas {
@@ -53,5 +54,13 @@ class JsCanvas(id: String) : SharedCanvas {
             ctx.stroke()
         }
         ctx.fill()
+    }
+
+    override fun clear() {
+        ctx.clearRect(
+            0.0,
+            0.0,
+            canvasElement.width.toDouble(),
+            canvasElement.height.toDouble())
     }
 }

@@ -10,4 +10,5 @@ interface SharedCanvas {
     fun bindEvents(board: DrawingBoard)
     fun drawLine(points: List<Point>, paint: Paint)
     fun drawCircle(center: Point, radius: Double, paint: Paint)
+    fun clear()
 }
