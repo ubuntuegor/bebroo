@@ -39,7 +39,7 @@ fun Application.initializeDatabase() {
     }
 }
 
-fun Application.api(testing: Boolean = false) {
+fun Application.api() {
     initializeDatabase()
 
     install(ContentNegotiation) {
