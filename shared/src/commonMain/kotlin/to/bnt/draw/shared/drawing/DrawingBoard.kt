@@ -35,8 +35,8 @@ class DrawingBoard(private val canvas: SharedCanvas) {
     }
 
     private fun calculateScaleCoefficient(wheelDelta: Double): Double {
-        val scaleDelta = if (wheelDelta >= 0) 1.0 / wheelDelta else -wheelDelta
-        return scaleDelta * wheelDelta * WHEEL_DELTA_FACTOR
+        val scaleFactor = if (wheelDelta >= 0) 1.0 / WHEEL_DELTA_FACTOR else WHEEL_DELTA_FACTOR
+        return scaleFactor * scaleCoefficient
     }
 
     fun onMouseWheel(wheelDelta: Double) {
@@ -67,6 +67,6 @@ class DrawingBoard(private val canvas: SharedCanvas) {
 
     companion object {
         private const val SIMPLIFICATION_EPSILON = 2.0
-        private const val WHEEL_DELTA_FACTOR = 0.01
+        private const val WHEEL_DELTA_FACTOR = 1.05
     }
 }
