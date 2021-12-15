@@ -1,6 +1,8 @@
 package to.bnt.draw.shared.drawing.drawing_structures
 
-import to.bnt.draw.shared.drawing.points_algorithms.smoothLine
+package shared.drawing.drawing_structures
+import shared.drawing.line_algorithms.smoothLine
+import kotlin.random.Random
 
 class LineConverterStorage {
     companion object {
@@ -8,47 +10,49 @@ class LineConverterStorage {
         const val POINTER_AREA_EPSILON = 10.0
     }
 
-    val simplifiedLinesStorage = LineStorage()
-    var smoothedLinesStorage = LineStorage()
+    private val simplifiedLinesStorage = LineStorage()
+    private var smoothedLinesStorage = LineStorage()
 
-    var linesSortedByLeftX = arrayListOf<Pair<Long, Double>>()
-    var linesSortedByRightX = arrayListOf<Pair<Long, Double>>()
-    var linesSortedByTopY = arrayListOf<Pair<Long, Double>>()
-    var linesSortedByDownY = arrayListOf<Pair<Long, Double>>()
-    val rectanglesContainingLine = mutableMapOf<Long, Rectangle>()
+    private data class LineCoordinate(val lineID: Long, val coordinateValue: Double)
 
-    var idCounter = 0L
+    private var linesSortedByLeftX = arrayListOf<LineCoordinate>()
+    private var linesSortedByRightX = arrayListOf<LineCoordinate>()
+    private var linesSortedByTopY = arrayListOf<LineCoordinate>()
+    private var linesSortedByDownY = arrayListOf<LineCoordinate>()
+    private val rectanglesContainingLine = mutableMapOf<Long, Rectangle>()
 
-    fun calculateLineID() = idCounter.also { ++idCounter }
+    private var idCounter = 0L
 
-    private val lineExtremeCoordinateComparator = Comparator<Pair<Long, Double>> {
-        a, b -> when {
-            a.second < b.second -> -1
-            a.second > b.second -> 1
-            else -> 0
-        }
+    private fun calculateLineID() = idCounter.also { ++idCounter }
+
+    private val lineExtremeCoordinateComparator = Comparator<LineCoordinate> {
+            a, b -> when {
+        a.coordinateValue < b.coordinateValue -> -1
+        a.coordinateValue > b.coordinateValue -> 1
+        else -> 0
+    }
     }
 
-    private fun ArrayList<Pair<Long, Double>>.findInsertionIndexByOrder(element: Pair<Long, Double>): Int {
-        val binarySearchValue = this.binarySearch(element, lineExtremeCoordinateComparator)
+    private fun ArrayList<LineCoordinate>.findInsertionIndexByOrder(lineCoordinate: LineCoordinate): Int {
+        val binarySearchValue = this.binarySearch(lineCoordinate, lineExtremeCoordinateComparator)
         return if (binarySearchValue >= 0) binarySearchValue else -(binarySearchValue + 1)
     }
 
-    private fun ArrayList<Pair<Long, Double>>.addByOrder(element: Pair<Long, Double>) {
-        this.add(findInsertionIndexByOrder(element), element)
+    private fun ArrayList<LineCoordinate>.addByOrder(lineCoordinate: LineCoordinate) {
+        this.add(findInsertionIndexByOrder(lineCoordinate), lineCoordinate)
     }
 
-    private fun ArrayList<Pair<Long, Double>>.removeByOrder(element: Pair<Long, Double>): Boolean {
-        val insertionIndex = findInsertionIndexByOrder(element)
+    private fun ArrayList<LineCoordinate>.removeByOrder(lineCoordinate: LineCoordinate): Boolean {
+        val insertionIndex = findInsertionIndexByOrder(lineCoordinate)
         if (insertionIndex !in indices) return false
 
         for (descendingIndex in insertionIndex downTo 0)
-            if (this[descendingIndex].first == element.first) {
+            if (this[descendingIndex].lineID == lineCoordinate.lineID) {
                 this.removeAt(descendingIndex)
                 return true
             }
-        for (ascendingIndex in insertionIndex..lastIndex)
-            if (this[ascendingIndex].first == element.first) {
+        for (ascendingIndex in (insertionIndex + 1)..lastIndex)
+            if (this[ascendingIndex].lineID == lineCoordinate.lineID) {
                 removeAt(ascendingIndex)
                 return true
             }
@@ -58,18 +62,26 @@ class LineConverterStorage {
 
     private fun sortLineByExtremePoints(line: Line, lineID: Long) {
         val rectangleContainingLine = line.findContainingRectangle()
-        linesSortedByLeftX.addByOrder(Pair(lineID, rectangleContainingLine.leftTopPoint.x))
-        linesSortedByTopY.addByOrder(Pair(lineID, rectangleContainingLine.leftTopPoint.y))
-        linesSortedByRightX.addByOrder(Pair(lineID, rectangleContainingLine.rightDownPoint.x))
-        linesSortedByDownY.addByOrder(Pair(lineID, rectangleContainingLine.rightDownPoint.y))
+        linesSortedByLeftX.addByOrder(LineCoordinate(lineID, rectangleContainingLine.leftTopPoint.x))
+        linesSortedByTopY.addByOrder(LineCoordinate(lineID, rectangleContainingLine.leftTopPoint.y))
+        linesSortedByRightX.addByOrder(LineCoordinate(lineID, rectangleContainingLine.rightDownPoint.x))
+        linesSortedByDownY.addByOrder(LineCoordinate(lineID, rectangleContainingLine.rightDownPoint.y))
         rectanglesContainingLine[lineID] = rectangleContainingLine
     }
 
     private fun removeLineFromSortingStorages(lineID: Long) {
-        linesSortedByLeftX.removeByOrder(Pair(lineID, rectanglesContainingLine[lineID]?.leftTopPoint?.x ?: return))
-        linesSortedByTopY.removeByOrder(Pair(lineID, rectanglesContainingLine[lineID]?.leftTopPoint?.y ?: return))
-        linesSortedByRightX.removeByOrder(Pair(lineID, rectanglesContainingLine[lineID]?.rightDownPoint?.x ?: return))
-        linesSortedByDownY.removeByOrder(Pair(lineID, rectanglesContainingLine[lineID]?.rightDownPoint?.y ?: return))
+        linesSortedByLeftX.removeByOrder(
+            LineCoordinate(lineID, rectanglesContainingLine[lineID]?.leftTopPoint?.x ?: return)
+        )
+        linesSortedByTopY.removeByOrder(
+            LineCoordinate(lineID, rectanglesContainingLine[lineID]?.leftTopPoint?.y ?: return)
+        )
+        linesSortedByRightX.removeByOrder(
+            LineCoordinate(lineID, rectanglesContainingLine[lineID]?.rightDownPoint?.x ?: return)
+        )
+        linesSortedByDownY.removeByOrder(
+            LineCoordinate(lineID, rectanglesContainingLine[lineID]?.rightDownPoint?.y ?: return)
+        )
         rectanglesContainingLine.remove(lineID)
     }
 
@@ -92,3 +104,4 @@ class LineConverterStorage {
 
     fun getDisplayingLines() = smoothedLinesStorage.getLines()
 }
+
