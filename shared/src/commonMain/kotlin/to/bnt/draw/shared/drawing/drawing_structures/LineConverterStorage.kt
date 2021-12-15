@@ -93,13 +93,92 @@ class LineConverterStorage {
         sortLineByExtremePoints(smoothedLine, lineID)
     }
 
+    fun addAll(lines: List<Line>) = lines.forEach { addLine(it) }
+
     fun removeLine(lineID: Long) {
         simplifiedLinesStorage.removeLine(lineID)
         smoothedLinesStorage.removeLine(lineID)
         removeLineFromSortingStorages(lineID)
     }
 
-    fun getLineAtPoint(point: Point) {
+    private fun ArrayList<LineCoordinate>.smallestIndexForCoordinateGreaterThanOrEqual(value: Double): Int {
+        var smallestSuitableLineIndex = findInsertionIndexByOrder(LineCoordinate(0L, value))
+        while (smallestSuitableLineIndex >= 1) {
+            if (this[smallestSuitableLineIndex - 1].coordinateValue < value)
+                break
+            --smallestSuitableLineIndex
+        }
+        return smallestSuitableLineIndex
+    }
+
+    private fun ArrayList<LineCoordinate>.biggestIndexForCoordinateLessThanOrEqual(value: Double): Int {
+        var biggestSuitableLineIndex = findInsertionIndexByOrder(LineConverterStorage.LineCoordinate(0L, value))
+        --biggestSuitableLineIndex;
+        while (biggestSuitableLineIndex < lastIndex) {
+            if (this[biggestSuitableLineIndex + 1].coordinateValue > value)
+                break
+            ++biggestSuitableLineIndex
+        }
+        return biggestSuitableLineIndex
+    }
+
+    private fun ArrayList<LineCoordinate>.getLinesWithCoordinateGreaterThanOrEqual(value: Double): List<Long> =
+        map { it.lineID }.slice(smallestIndexForCoordinateGreaterThanOrEqual(value)..lastIndex)
+
+    private fun ArrayList<LineCoordinate>.getLinesWithCoordinateLessThanOrEqual(value: Double): List<Long> =
+        map { it.lineID }.slice(0..biggestIndexForCoordinateLessThanOrEqual(value))
+
+    private fun ArrayList<LineConverterStorage.LineCoordinate>.getLinesWithCoordinateInSegment(
+        leftBorderValue: Double,
+        rightBorderValue: Double
+    ): List<Long> {
+        if (leftBorderValue > rightBorderValue) return emptyList()
+        val smallestSuitableLineIndex = smallestIndexForCoordinateGreaterThanOrEqual(leftBorderValue)
+        val biggestSuitableLineIndex = biggestIndexForCoordinateLessThanOrEqual(rightBorderValue)
+        if (smallestSuitableLineIndex == biggestSuitableLineIndex) return listOf(this[smallestSuitableLineIndex].lineID)
+        return this.map { it.lineID }.slice(smallestSuitableLineIndex..biggestSuitableLineIndex)
+    }
+
+    private fun getLinesWithContainingRectangles(innerRectangle: Rectangle): Set<Long> {
+        val linesByLeftX = linesSortedByLeftX.getLinesWithCoordinateLessThanOrEqual(innerRectangle.leftTopPoint.x)
+        val linesByRightX = linesSortedByRightX.getLinesWithCoordinateGreaterThanOrEqual(innerRectangle.rightDownPoint.x,)
+        val linesByTopY = linesSortedByTopY.getLinesWithCoordinateGreaterThanOrEqual(innerRectangle.leftTopPoint.y)
+        val linesByDownY = linesSortedByDownY.getLinesWithCoordinateLessThanOrEqual(innerRectangle.rightDownPoint.y)
+
+        return linesByLeftX.intersect(linesByRightX).intersect(linesByTopY).intersect(linesByDownY)
+    }
+
+    private fun getLinesWithIntersectingRectangles(intersectedRectangle: Rectangle): Set<Long> {
+        val linesByLeftX = linesSortedByLeftX.getLinesWithCoordinateInSegment(
+            intersectedRectangle.leftTopPoint.x, intersectedRectangle.rightDownPoint.x
+        )
+        val linesByRightX = linesSortedByRightX.getLinesWithCoordinateInSegment(
+            intersectedRectangle.leftTopPoint.x, intersectedRectangle.rightDownPoint.x
+        )
+        val linesByTopY = linesSortedByTopY.getLinesWithCoordinateInSegment(
+            intersectedRectangle.rightDownPoint.y, intersectedRectangle.leftTopPoint.y
+        )
+        val linesByDownY = linesSortedByDownY.getLinesWithCoordinateInSegment(
+            intersectedRectangle.rightDownPoint.y, intersectedRectangle.leftTopPoint.y
+        )
+
+        return linesByLeftX.union(linesByRightX).filter { linesByDownY.union(linesByTopY).contains(it) }.toSet()
+    }
+
+    private fun getRectanglesWithCommonPart(givenRectangle: Rectangle): Set<Long> {
+        return getLinesWithIntersectingRectangles(givenRectangle) +
+                getLinesWithContainingRectangles(givenRectangle)
+    }
+
+    fun getLineAtPoint(point: Point): Line? {
+        val areaEpsilonVector = Point(POINTER_AREA_EPSILON, POINTER_AREA_EPSILON)
+        val pointRectangle = Rectangle(
+            point - areaEpsilonVector,
+            point + areaEpsilonVector
+        )
+        val suspectedLinesID = getRectanglesWithCommonPart(pointRectangle)
+        val suspectedLines = suspectedLinesID.map { smoothedLinesStorage.getLine(it) }
+        return suspectedLines.minByOrNull { it?.findNearestPointTo(point) ?: Double.POSITIVE_INFINITY }
     }
 
     fun getDisplayingLines() = smoothedLinesStorage.getLines()
