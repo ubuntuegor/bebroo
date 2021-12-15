@@ -23,29 +23,35 @@ class LineConverterStorage {
 
     private val lineExtremeCoordinateComparator = Comparator<Pair<Long, Double>> {
         a, b -> when {
-        a.second < b.second -> -1
-        a.second > b.second -> 1
-        else -> 0
+            a.second < b.second -> -1
+            a.second > b.second -> 1
+            else -> 0
         }
     }
 
-    private fun ArrayList<Pair<Long, Double>>.addByOrder(element: Pair<Long, Double>) {
+    private fun ArrayList<Pair<Long, Double>>.findInsertionIndexByOrder(element: Pair<Long, Double>): Int {
         val binarySearchValue = this.binarySearch(element, lineExtremeCoordinateComparator)
-        val insertionIndex = if (binarySearchValue >= 0) binarySearchValue else -(binarySearchValue + 1)
-        this.add(insertionIndex, element)
+        return if (binarySearchValue >= 0) binarySearchValue else -(binarySearchValue + 1)
+    }
+
+    private fun ArrayList<Pair<Long, Double>>.addByOrder(element: Pair<Long, Double>) {
+        this.add(findInsertionIndexByOrder(element), element)
     }
 
     private fun ArrayList<Pair<Long, Double>>.removeByOrder(element: Pair<Long, Double>): Boolean {
-        val binarySearchValue = this.binarySearch(element, lineExtremeCoordinateComparator)
+        val insertionIndex = findInsertionIndexByOrder(element)
+        if (insertionIndex !in indices) return false
 
-        if (binarySearchValue < 0) return false
-
-        for (descendingIndex in binarySearchValue..0)
-            if (this[descendingIndex].first == element.first)
+        for (descendingIndex in insertionIndex downTo 0)
+            if (this[descendingIndex].first == element.first) {
+                this.removeAt(descendingIndex)
                 return true
-        for (ascendingIndex in binarySearchValue..0)
-            if (this[ascendingIndex].first == element.first)
+            }
+        for (ascendingIndex in insertionIndex..lastIndex)
+            if (this[ascendingIndex].first == element.first) {
+                removeAt(ascendingIndex)
                 return true
+            }
 
         return false
     }
@@ -63,7 +69,7 @@ class LineConverterStorage {
         linesSortedByLeftX.removeByOrder(Pair(lineID, rectanglesContainingLine[lineID]?.leftTopPoint?.x ?: return))
         linesSortedByTopY.removeByOrder(Pair(lineID, rectanglesContainingLine[lineID]?.leftTopPoint?.y ?: return))
         linesSortedByRightX.removeByOrder(Pair(lineID, rectanglesContainingLine[lineID]?.rightDownPoint?.x ?: return))
-        linesSortedByTopY.removeByOrder(Pair(lineID, rectanglesContainingLine[lineID]?.leftTopPoint?.y ?: return))
+        linesSortedByDownY.removeByOrder(Pair(lineID, rectanglesContainingLine[lineID]?.rightDownPoint?.y ?: return))
         rectanglesContainingLine.remove(lineID)
     }
 
@@ -86,4 +92,3 @@ class LineConverterStorage {
 
     fun getDisplayingLines() = smoothedLinesStorage.getLines()
 }
-
