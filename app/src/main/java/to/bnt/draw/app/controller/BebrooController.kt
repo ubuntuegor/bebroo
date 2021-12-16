@@ -5,6 +5,4 @@ import to.bnt.draw.shared.apiClient.ApiClient
 
 object BebrooController {
     val client = ApiClient(Config.url)
-
-    fun isTokenExist() = client.token != null
 }

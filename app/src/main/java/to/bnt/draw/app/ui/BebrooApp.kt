@@ -33,7 +33,7 @@ fun BebrooApp() {
         BebrooController.client.token = settingsStoreState.value.token
 
         val navController = rememberNavController()
-        if (BebrooController.isTokenExist()) {
+        if (settingsStoreState.value.token == null) {
             NavHost(navController = navController, startDestination = "login") {
                 composable("login") { LoginScreen(navController) }
                 composable("menu") { MenuScreen(navController) }
