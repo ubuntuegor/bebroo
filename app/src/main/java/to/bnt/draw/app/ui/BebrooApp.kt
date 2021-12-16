@@ -13,7 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import to.bnt.draw.app.controller.BebrooController
-import to.bnt.draw.app.controller.UserPreferencesStorage
+import to.bnt.draw.app.controller.UserPreferencesManager
 import to.bnt.draw.app.data.SettingsStore
 import to.bnt.draw.app.theme.BebrooAppTheme
 
@@ -27,7 +27,7 @@ fun BebrooApp() {
             SideEffect { systemUiController.setSystemBarsColor(color = Color.White, darkIcons = true) }
         }
 
-        val userPreferencesStorage = UserPreferencesStorage(LocalContext.current)
+        val userPreferencesStorage = UserPreferencesManager(LocalContext.current)
         val settingsStoreState =
             userPreferencesStorage.getPreferencesFromDataStore().collectAsState(initial = SettingsStore())
         BebrooController.client.token = settingsStoreState.value.token

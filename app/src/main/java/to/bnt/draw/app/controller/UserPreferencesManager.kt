@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.map
 import to.bnt.draw.app.data.SettingsStore
 import java.io.IOException
 
-class UserPreferencesStorage(private val context: Context) {
+class UserPreferencesManager(private val context: Context) {
     suspend fun saveToDataStore(settingsStore: SettingsStore) {
         context.dataStore.edit { preferences ->
             if (settingsStore.token == null) {

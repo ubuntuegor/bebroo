@@ -29,7 +29,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import to.bnt.draw.app.R
 import to.bnt.draw.app.controller.BebrooController
-import to.bnt.draw.app.controller.UserPreferencesStorage
+import to.bnt.draw.app.controller.UserPreferencesManager
 import to.bnt.draw.app.data.SettingsStore
 import to.bnt.draw.app.theme.BebrooSansFontFamily
 import to.bnt.draw.app.theme.Coral
@@ -40,7 +40,7 @@ import to.bnt.draw.shared.apiClient.exceptions.ApiException
 @Composable
 fun LoginScreen(navController: NavController) {
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-    val userPreferencesStorage = UserPreferencesStorage(LocalContext.current)
+    val userPreferencesStorage = UserPreferencesManager(LocalContext.current)
     Column {
         Image(
             painter = painterResource(R.drawable.logo),
