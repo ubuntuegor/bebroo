@@ -1,5 +1,6 @@
 package to.bnt.draw.app.ui
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,25 +23,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import to.bnt.draw.app.R
+import to.bnt.draw.app.data.Brush
+import to.bnt.draw.app.data.defaultBrushes
+import to.bnt.draw.app.theme.Coral
 import to.bnt.draw.app.theme.DarkGray
 
 @Composable
 fun BoardScreen(navController: NavController, boardID: String) {
+    val currentBrush = remember { mutableStateOf(defaultBrushes.first()) }
     Scaffold(
         topBar = { BoardTopBar(navController, boardID) },
-        bottomBar = { DrawingBoardBottomBar() },
+        bottomBar = { DrawingBoardBottomBar(currentBrush) },
     ) { innerPadding ->
-        Desk(innerPadding)
+        Desk(currentBrush, innerPadding)
     }
 }
 
-//TODO Move to Models
-data class Brush(val color: Color, val stroke: Int)
-
 @Composable
 fun BoardTopBar(
-    navController: NavController,
-    boardName: String
+    navController: NavController, boardName: String
 ) {
     TopAppBar(title = {
         Text(
@@ -72,9 +73,8 @@ fun BoardTopBar(
 }
 
 @Composable
-fun DrawingBoardBottomBar() {
-    Surface(elevation = 7.dp)
-    {
+fun DrawingBoardBottomBar(currentBrush: MutableState<Brush>) {
+    Surface(elevation = 7.dp) {
         Column(modifier = Modifier.height(95.dp).fillMaxWidth().padding(1.dp)) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 Box(modifier = Modifier.padding(start = 53.dp, end = 47.dp).fillMaxWidth()) {
@@ -90,7 +90,10 @@ fun DrawingBoardBottomBar() {
                 var sliderPosition by remember { mutableStateOf(0f) }
                 Row(modifier = Modifier.padding(start = 57.dp, end = 57.dp).padding(top = 11.dp)) {
                     Slider(
-                        value = sliderPosition, onValueChange = { sliderPosition = it }, colors = SliderDefaults.colors(
+                        value = sliderPosition, onValueChange = {
+                            sliderPosition = it
+                            currentBrush.value = currentBrush.value.copy(stroke = it.toInt())
+                        }, colors = SliderDefaults.colors(
                             thumbColor = DarkGray,
                             activeTrackColor = DarkGray,
                             inactiveTrackColor = Color.LightGray,
@@ -100,52 +103,59 @@ fun DrawingBoardBottomBar() {
                     )
                 }
             }
-            //TODO Move colors for brushes to Colors
-            val brushes = listOf(
-                Brush(Color(0xFFF85353), 8),
-                Brush(Color(0xFF38CA46), 9),
-                Brush(Color(0xFF388CCA), 10),
-                Brush(Color(0xFF9238CA), 11),
-                Brush(Color(0xFFFA78C6), 12),
-                Brush(DarkGray, 13),
-            )
+
             Row(
-                modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                for (brush in brushes) {
+                var selectedOption by remember { mutableStateOf(defaultBrushes.first()) }
+                val onSelectionChange = { brush: Brush -> selectedOption = brush }
+                for (brush in defaultBrushes) {
                     Box(
                         modifier = Modifier.size(30.dp).clip(CircleShape)
-                            .border(width = 1.dp, color = Color.LightGray, shape = CircleShape)
-                            .clickable { print("Bebra") }, contentAlignment = Alignment.Center
+                            .border(width = 1.dp, color = Color.LightGray, shape = CircleShape).clickable {
+                                currentBrush.value = brush
+                                onSelectionChange(brush)
+                            }, contentAlignment = Alignment.Center
                     ) {
-                        Box(modifier = Modifier.size(brush.stroke.dp).clip(CircleShape).background(brush.color))
+                        Box(
+                            modifier = Modifier.size(
+                                if (brush == selectedOption) {
+                                    18.dp
+                                } else {
+                                    brush.stroke.dp
+                                }
+                            ).clip(CircleShape).background(brush.color)
+                        )
                     }
                 }
                 Box(
                     modifier = Modifier.size(30.dp).clip(CircleShape)
                         .border(width = 1.dp, color = Color.LightGray, shape = CircleShape)
-                        .clickable { print("Bebra") },
+                        .clickable { Log.i("BoardScreen", "Hello! Im a color picker. I am still not working :(") },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Edit,
-                        contentDescription = "change color",
+                        contentDescription = "edit color",
                         modifier = Modifier.size(17.dp),
                         tint = Color.LightGray
                     )
                 }
+                val eraserBrush = Brush(color = Color.Unspecified)
                 Box(
                     modifier = Modifier.size(30.dp).clip(CircleShape)
                         .border(width = 1.dp, color = Color.LightGray, shape = CircleShape)
-                        .clickable { print("Bebra") },
-                    contentAlignment = Alignment.Center
+                        .clickable { onSelectionChange(eraserBrush) }, contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.eraser_icon),
-                        contentDescription = "Eraser",
+                        contentDescription = "eraser",
                         modifier = Modifier.size(17.dp),
-                        tint = Color.LightGray
+                        tint = if (selectedOption == eraserBrush) {
+                            Coral
+                        } else {
+                            Color.LightGray
+                        }
                     )
                 }
             }
