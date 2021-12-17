@@ -71,7 +71,7 @@ val homePage = fc<Props> {
                 position = Position.absolute
                 top = 50.pct
                 left = 10.px
-                width = 35.pct
+                maxWidth = 35.pct
                 transform { translateY((-50).pct) }
             }
             createButton { showingCreateBoardModal = true }
@@ -81,7 +81,7 @@ val homePage = fc<Props> {
                 position = Position.absolute
                 top = 50.pct
                 right = 10.px
-                width = 35.pct
+                maxWidth = 35.pct
                 transform { translateY((-50).pct) }
             }
             user?.let {
