@@ -13,7 +13,7 @@ import styled.styledDiv
 val modal = fc<PropsWithChildren> { props ->
     styledDiv {
         css {
-            position = Position.absolute
+            position = Position.fixed
             left = 0.px
             top = 0.px
             width = 100.pct
