@@ -65,7 +65,7 @@ class DrawingBoard(private val canvas: SharedCanvas) {
     }
 
     fun drawLine(simplifiedLine: Line) {
-        canvas.drawLine(conversionStorage.addLine(simplifiedLine).points, paint)
+        canvas.drawLine(conversionStorage.addLine(simplifiedLine)?.points ?: return, paint)
     }
 
     private fun redrawLines() {

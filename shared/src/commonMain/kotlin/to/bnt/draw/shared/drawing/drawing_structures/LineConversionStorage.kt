@@ -30,6 +30,7 @@ private class LineRectanglesStorage {
     }
 
     fun removeRectangleByLineID(lineID: Long): Rectangle? {
+        removeLineFromSortingStorages(lineID)
         return rectanglesContainingLine.remove(lineID)
     }
 
@@ -166,7 +167,6 @@ private class LineRectanglesStorage {
         return getLinesWithIntersectingRectangles(givenRectangle) +
                 getLinesWithContainingRectangles(givenRectangle)
     }
-
 }
 
 class LineConversionStorage(private var screenWidth: Int, private var screenHeight: Int) {
@@ -224,7 +224,7 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
             scaleCoefficient
         )
 
-    fun addLine(simplifiedLine: Line): Line {
+    fun addLine(simplifiedLine: Line): Line? {
         val lineID = calculateLineID()
         val simplifiedLineInWorldSystem =
             simplifiedLinesStorage.addLine(
@@ -237,7 +237,7 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
         )
         rectanglesStorage.addRectangle(
             lineID,
-            smoothedLineInWorldSystem.getContainingRectangle() ?: return
+            smoothedLineInWorldSystem.getContainingRectangle() ?: return null
         )
         linesID.add(lineID)
 
@@ -268,7 +268,10 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
     }
 
     fun removeLineAtPoint(point: Point) {
-        removeLine(getLineAtPoint(point) ?: return)
+        val removedLineID = getLineAtPoint(point)
+        removedLineID ?: return
+        removeLine(removedLineID)
+        rectanglesStorage.removeRectangleByLineID(removedLineID)
     }
 
     private fun convertDisplayingLinesInScreenSystem(): List<Line> {
