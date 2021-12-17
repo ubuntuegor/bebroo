@@ -18,8 +18,12 @@ sealed class Action {
 }
 
 @Serializable
-@SerialName("addFigures")
-class AddFigures(val figures: List<Figure>) : Action()
+@SerialName("addFigure")
+class AddFigure(val localId: Int? = null, val figure: Figure) : Action()
+
+@Serializable
+@SerialName("figureAck")
+class FigureAck(val localId: Int, val id: Int) : Action()
 
 @Serializable
 @SerialName("removeFigure")

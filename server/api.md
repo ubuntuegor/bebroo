@@ -150,9 +150,14 @@ Communication using JSON
 
 **Message types**:
 
-- New figures
-    - `action`: `addFigures`
-    - `figures`: `Figure[]`
+- New figure
+    - `action`: `addFigure`
+    - `localId`: `Int?`
+    - `figures`: `Figure`
+- Figure acknowledged
+    - `action`: `figureAck`
+    - `localId`: `Int`
+    - `id`: `Int`
 - Remove figure
     - `action`: `removeFigure`
     - `figureId`: `int`
@@ -167,4 +172,4 @@ Communication using JSON
     - `userId`: `int`
 
 **User to server** (*only allowed for authenticated users*): `addFigure`, `removeFigure`  
-**Server to user**: `addFigure`, `removeFigure`, `connectedUsers`, `userConnected`, `userDisconnected`  
+**Server to user**: `addFigure`, `figureAck` `removeFigure`, `connectedUsers`, `userConnected`, `userDisconnected`  
