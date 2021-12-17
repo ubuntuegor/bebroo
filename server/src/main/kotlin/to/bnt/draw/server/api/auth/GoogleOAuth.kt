@@ -72,7 +72,6 @@ fun Route.googleOAuth() {
                     val user = Users.select { Users.googleId eq googleInfo.id }.firstOrNull()
                     user?.let {
                         Users.update({ Users.googleId eq googleInfo.id }) {
-                            it[displayName] = googleInfo.name
                             it[avatarUrl] = googleInfo.picture
                         }
                         user[Users.id].value
