@@ -1,4 +1,4 @@
-package to.bnt.draw.shared.drawing.points_algorithms
+package to.bnt.draw.shared.drawing.line_algorithms
 
 import to.bnt.draw.shared.drawing.drawing_structures.Line
 import to.bnt.draw.shared.drawing.drawing_structures.Point

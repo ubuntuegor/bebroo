@@ -1,6 +1,6 @@
 package to.bnt.draw.shared.drawing.drawing_structures
 
-data class Point(val x: Double, val y: Double) {
+data class Point(var x: Double, var y: Double) {
     operator fun plus(otherPoint: Point) = Point(x + otherPoint.x, y + otherPoint.y)
     operator fun unaryMinus() = Point(-x, -y)
     operator fun minus(otherPoint: Point) = plus(-otherPoint)
