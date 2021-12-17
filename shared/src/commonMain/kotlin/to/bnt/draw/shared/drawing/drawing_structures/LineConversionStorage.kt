@@ -170,11 +170,6 @@ private class LineRectanglesStorage {
 }
 
 class LineConversionStorage(private var screenWidth: Int, private var screenHeight: Int) {
-    companion object {
-        const val DEFAULT_DISTRIBUTION_SEGMENTS_COUNT = 100L
-        const val POINTER_AREA_EPSILON = 10.0
-    }
-
     private val simplifiedLinesStorage = LineStorage()
     private var smoothedLinesStorage = LineStorage()
     private val linesID = mutableSetOf<Long>()
@@ -183,35 +178,29 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
     private var idCounter = 0L
 
     private var scaleCoefficient: Double = 1.0
-    private var originPosition = Point(0.0, 0.0)
+    private var cameraPoint = Point(0.0, 0.0)
 
     private fun calculateLineID() = idCounter.also { ++idCounter }
 
-    private fun findDistributionSegmentsCount(): Long {
-        var segmentsCount = (DEFAULT_DISTRIBUTION_SEGMENTS_COUNT * scaleCoefficient).toLong()
-        if (segmentsCount == 0L) segmentsCount = 1L
-        return segmentsCount
+    private fun calculateDistributionSegmentsCount(): Long {
+        val count = (DEFAULT_DISTRIBUTION_SEGMENTS_COUNT / scaleCoefficient).toLong()
+        return when {
+            count > MAX_DISTRIBUTION_SEGMENTS_COUNT -> MAX_DISTRIBUTION_SEGMENTS_COUNT
+            count < MIN_DISTRIBUTION_SEGMENTS_COUNT -> MIN_DISTRIBUTION_SEGMENTS_COUNT
+            else -> count
+        }
     }
 
     private fun addLineWithSmooth(lineID: Long, simplifiedLine: Line): Line {
         val smoothedLine =
-            smoothLine(simplifiedLine, findDistributionSegmentsCount())
+            smoothLine(simplifiedLine, calculateDistributionSegmentsCount())
         return smoothedLinesStorage.addLine(lineID, smoothedLine)
-    }
-
-    private fun recalculateDisplayingLines() {
-        smoothedLinesStorage = LineStorage()
-        for (lineID in linesID) {
-            val simplifiedLine = simplifiedLinesStorage.getLine(lineID)
-            simplifiedLine ?: continue
-            addLineWithSmooth(lineID, simplifiedLine)
-        }
     }
 
     private fun convertPointFromScreenToWorldSystem(point: Point) =
         convertPointFromScreenToWorldSystem(
             point,
-            originPosition,
+            cameraPoint,
             scaleCoefficient,
             screenWidth.toDouble(),
             screenHeight.toDouble()
@@ -220,19 +209,19 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
     private fun convertLineFromScreenToWorldSystem(line: Line) =
         convertLineFromScreenToWorldSystem(
             line,
-            originPosition,
-            scaleCoefficient,
+            cameraPoint,
             screenWidth.toDouble(),
-            screenHeight.toDouble()
+            screenHeight.toDouble(),
+            scaleCoefficient
         )
 
     private fun convertLineFromWorldToScreenSystem(line: Line) =
         convertLineFromWorldToScreenSystem(
             line,
-            originPosition,
-            scaleCoefficient,
+            cameraPoint + Point(200.0, 200.0),
             screenWidth.toDouble(),
-            screenHeight.toDouble()
+            screenHeight.toDouble(),
+            scaleCoefficient
         )
 
     fun addLine(simplifiedLine: Line): Line {
@@ -248,14 +237,11 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
         )
         rectanglesStorage.addRectangle(
             lineID,
-            smoothedLineInWorldSystem.findContainingRectangle()
+            smoothedLineInWorldSystem.getContainingRectangle() ?: return
         )
         linesID.add(lineID)
 
-        return smoothLine(
-            simplifiedLine,
-            DEFAULT_DISTRIBUTION_SEGMENTS_COUNT
-        )
+        return convertLineFromWorldToScreenSystem(smoothedLineInWorldSystem)
     }
 
     fun addAll(lines: List<Line>) = lines.forEach { addLine(it) }
@@ -295,8 +281,7 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
 
     fun changeScaleCoefficient(newScaleCoefficient: Double) {
         if (newScaleCoefficient <= 0.0) return
-        scaleCoefficient = newScaleCoefficient
-        recalculateDisplayingLines()
+        scaleCoefficient = newScaleCoefficient.coerceIn(MIN_SCALE_VALUE, MAX_SCALE_VALUE)
     }
 
     fun changeScreenSize(newWidth: Int, newHeight: Int) {
@@ -304,9 +289,17 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
         screenHeight = newHeight
     }
 
-    fun changeOriginPosition(point: Point) {
-        originPosition = point
+    fun translateCamera(translationVector: Point) {
+        println(cameraPoint)
+        cameraPoint += translationVector
     }
 
-    //fun scale
+    companion object {
+        const val DEFAULT_DISTRIBUTION_SEGMENTS_COUNT = 15L
+        const val POINTER_AREA_EPSILON = 10.0
+        const val MIN_SCALE_VALUE = 0.01
+        const val MAX_SCALE_VALUE = 100.0
+        const val MAX_DISTRIBUTION_SEGMENTS_COUNT = 30L
+        const val MIN_DISTRIBUTION_SEGMENTS_COUNT = 5L
+    }
 }
