@@ -3,7 +3,7 @@ package to.bnt.draw.shared.drawing
 import to.bnt.draw.shared.drawing.drawing_structures.Line
 import to.bnt.draw.shared.drawing.drawing_structures.LineConversionStorage
 import to.bnt.draw.shared.drawing.drawing_structures.Point
-import to.bnt.draw.shared.drawing.points_algorithms.simplifyLine
+import to.bnt.draw.shared.drawing.line_algorithms.simplifyLine
 
 class DrawingBoard(private val canvas: SharedCanvas) {
     init {

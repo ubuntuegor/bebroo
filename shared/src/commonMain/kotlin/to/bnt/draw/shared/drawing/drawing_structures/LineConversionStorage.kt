@@ -1,8 +1,8 @@
 package to.bnt.draw.shared.drawing.drawing_structures
 
-import points_alorithms.convertLineFromScreenToWorldSystem
-import points_alorithms.convertLineFromWorldToScreenSystem
-import points_alorithms.convertPointFromScreenToWorldSystem
+import to.bnt.draw.shared.drawing.line_algorithms.convertLineFromScreenToWorldSystem
+import to.bnt.draw.shared.drawing.line_algorithms.convertLineFromWorldToScreenSystem
+import to.bnt.draw.shared.drawing.line_algorithms.convertPointFromScreenToWorldSystem
 import to.bnt.draw.shared.drawing.points_algorithms.smoothLine
 
 private data class LineCoordinate(val lineID: Long, val coordinateValue: Double)
