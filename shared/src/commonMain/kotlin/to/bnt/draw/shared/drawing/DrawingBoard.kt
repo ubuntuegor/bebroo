@@ -10,37 +10,58 @@ class DrawingBoard(private val canvas: SharedCanvas) {
         canvas.bindEvents(this)
     }
 
-    private var isMouseDown = false
+    private var isDrawing = false
     private val drawingLine = Line()
     private val conversionStorage = LineConversionStorage(canvas.width, canvas.height)
     private var scaleCoefficient = 1.0
+    private var isDragging = false
+    private var lastMousePoint = Point(0.0, 0.0)
     val paint = Paint(strokeWidth = 1.0, strokeColor = "#fab0be")
 
     fun onMouseDown(point: Point) {
-        isMouseDown = true
-        drawingLine.clear()
+        isDrawing = true
     }
 
     fun onMouseMove(point: Point) {
-        println(point)
-        if (isMouseDown) {
-            drawingLine.addPoint(point)
+        when {
+            isDragging -> {
+                conversionStorage.translateCamera((lastMousePoint - point).apply { y = -y })
+                redrawLines()
+            }
+            isDrawing -> drawingLine.addPoint(point)
         }
+        lastMousePoint = point
+    }
+
+    fun onWheelUp() {
+        isDragging = false
+    }
+
+    fun onWheelDown() {
+        isDragging = true
+        stopDrawing()
     }
 
     fun onMouseUp(point: Point) {
         drawingLine.addPoint(point)
-        isMouseDown = false
+        stopDrawing()
+    }
+
+    fun onMouseWheel(wheelDelta: Double) {
+        if (isDrawing || isDragging) return
+        changeScaleCoefficient(calculateScaleCoefficient(wheelDelta))
+    }
+
+    fun stopDrawing() {
+        if (!isDrawing) return
         drawLine(simplifyLine(drawingLine, SIMPLIFICATION_EPSILON))
+        drawingLine.clear()
+        isDrawing = false
     }
 
     private fun calculateScaleCoefficient(wheelDelta: Double): Double {
         val scaleFactor = if (wheelDelta >= 0) 1.0 / WHEEL_DELTA_FACTOR else WHEEL_DELTA_FACTOR
         return scaleFactor * scaleCoefficient
-    }
-
-    fun onMouseWheel(wheelDelta: Double) {
-        changeScaleCoefficient(calculateScaleCoefficient(wheelDelta))
     }
 
     fun drawLine(simplifiedLine: Line) {

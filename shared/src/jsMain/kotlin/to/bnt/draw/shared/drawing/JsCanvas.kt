@@ -20,7 +20,10 @@ class JsCanvas(id: String) : SharedCanvas {
     override fun bindEvents(board: DrawingBoard) {
         canvasElement.addEventListener("mousedown", { event  ->
             event as MouseEvent
-            board.onMouseDown(Point(event.offsetX, event.offsetY))
+            when (event.button.toInt()) {
+                0 -> board.onMouseDown(Point(event.offsetX, event.offsetY))
+                1 -> board.onWheelDown()
+            }
         })
         canvasElement.addEventListener("mousemove", { event ->
             event as MouseEvent
@@ -28,11 +31,14 @@ class JsCanvas(id: String) : SharedCanvas {
         })
         canvasElement.addEventListener("mouseup", { event ->
             event as MouseEvent
-            board.onMouseUp(Point(event.offsetX, event.offsetY))
+            when (event.button.toInt()) {
+                0 -> board.onMouseUp(Point(event.offsetX, event.offsetY))
+                1 -> board.onWheelUp()
+            }
         })
         canvasElement.addEventListener("wheel", { event ->
             event as WheelEvent
-            board.onMouseWheel(event.deltaY)
+            board.onMouseWheel(event.deltaX + event.deltaY + event.deltaZ)
         })
     }
 
