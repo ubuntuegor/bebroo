@@ -10,7 +10,6 @@ import kotlinx.html.js.onClickFunction
 import org.w3c.dom.events.Event
 import react.*
 import react.dom.br
-import react.dom.div
 import react.dom.h1
 import react.router.dom.Link
 import react.router.dom.useHistory
@@ -72,6 +71,7 @@ val homePage = fc<Props> {
                 position = Position.absolute
                 top = 50.pct
                 left = 10.px
+                width = 35.pct
                 transform { translateY((-50).pct) }
             }
             createButton { showingCreateBoardModal = true }
@@ -81,6 +81,7 @@ val homePage = fc<Props> {
                 position = Position.absolute
                 top = 50.pct
                 right = 10.px
+                width = 35.pct
                 transform { translateY((-50).pct) }
             }
             user?.let {
@@ -201,6 +202,7 @@ val userManage = fc<UserManageProps> { props ->
             css {
                 textAlign = TextAlign.right
                 marginRight = 12.px
+                overflow = Overflow.hidden
             }
 
             styledDiv {
@@ -208,6 +210,8 @@ val userManage = fc<UserManageProps> { props ->
                     marginBottom = 2.px
                     fontSize = 14.px
                     fontWeight = FontWeight.w500
+                    textOverflow = TextOverflow.ellipsis
+                    overflow = Overflow.hidden
                 }
 
                 +props.user.displayName
@@ -263,26 +267,33 @@ val boardListElement = fc<BoardListElementProps> { props ->
                 }
             }
 
-            div {
+            styledDiv {
+                css {
+                    overflow = Overflow.hidden
+                }
+
                 styledH1 {
                     css {
                         marginBottom = 5.px
                         fontFamily = Styles.brandFontFamily
                         fontWeight = FontWeight.normal
                         fontSize = 26.px
+                        overflow = Overflow.hidden
+                        textOverflow = TextOverflow.ellipsis
                     }
 
                     +props.board.name
                 }
                 styledDiv {
                     css {
-                        display = Display.inlineFlex
+                        display = Display.flex
                         alignItems = Align.center
                     }
 
                     styledDiv {
                         css {
                             marginRight = 8.px
+                            flex(.0, .0, FlexBasis.auto)
                             width = 21.px
                             height = 21.px
                             borderRadius = 50.pct
@@ -298,6 +309,8 @@ val boardListElement = fc<BoardListElementProps> { props ->
                             fontSize = 14.px
                             fontWeight = FontWeight.w500
                             color = Color(Styles.neutralTextColor)
+                            overflow = Overflow.hidden
+                            textOverflow = TextOverflow.ellipsis
                         }
                         +props.board.creator.displayName
                     }
