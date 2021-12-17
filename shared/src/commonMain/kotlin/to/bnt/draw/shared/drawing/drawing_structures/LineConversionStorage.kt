@@ -218,7 +218,7 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
     private fun convertLineFromWorldToScreenSystem(line: Line) =
         convertLineFromWorldToScreenSystem(
             line,
-            cameraPoint + Point(200.0, 200.0),
+            cameraPoint,
             screenWidth.toDouble(),
             screenHeight.toDouble(),
             scaleCoefficient
