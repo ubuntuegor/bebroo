@@ -29,8 +29,12 @@ val app = fc<Props> {
                 authPage()
             }
             Route {
-                attrs.path = arrayOf("/board")
+                attrs.path = arrayOf("/board/:uuid")
                 boardPage()
+            }
+            Route {
+                attrs.path = arrayOf("*")
+                notFoundPage()
             }
         }
     }
