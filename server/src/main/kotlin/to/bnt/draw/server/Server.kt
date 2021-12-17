@@ -29,7 +29,7 @@ fun Application.main() {
         }
 
         get("/board/{uuid}") {
-            val title = call.parameters["uuid"]?.let { getBoardByUuid(it) }?.let { it.name + " - " + appName }
+            val title = call.parameters["uuid"]?.let { getBoardByUuid(it) }?.let { it.name + " - " + appName } ?: appName
             call.respond(
                 FreeMarkerContent(
                     "page.ftl",
