@@ -15,8 +15,8 @@ import to.bnt.bebroo.web.Styles
 external interface TextFieldProps : Props {
     var title: String
     var value: String
-    var password: Boolean
-    var required: Boolean
+    var isPassword: Boolean
+    var isRequired: Boolean
     var maxCharacters: Int
     var onChange: (Event) -> Unit
 }
@@ -26,10 +26,10 @@ val roundedTextField = fc<TextFieldProps> { props ->
         css {
             +Styles.roundedTextInput
         }
-        input(type = if (props.password) InputType.password else InputType.text) {
+        input(type = if (props.isPassword) InputType.password else InputType.text) {
             attrs {
-                maxLength = props.maxCharacters.toString()
-                required = props.required
+                maxLength = props.maxCharacters?.toString()
+                required = props.isRequired
                 value = props.value
                 onChangeFunction = props.onChange
             }

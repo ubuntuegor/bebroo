@@ -1,18 +1,22 @@
 package to.bnt.bebroo.web
 
 import kotlinx.css.*
+import kotlinx.css.properties.TextDecoration
 import kotlinx.css.properties.s
 import kotlinx.css.properties.transition
 import styled.StyleSheet
 
 object Styles : StyleSheet("styles", isStatic = true) {
     const val defaultFontFamily = "Inter, Roboto, system-ui, sans-serif"
+    const val brandFontFamily = "\"Bebroo Sans\", $defaultFontFamily"
     const val accentColor = "#FF3E54"
     const val accentColorLight = "#FF7181"
     const val accentColorDark = "#E33552"
     const val accentColorHover = "#DE2B3F"
+    const val neutralTextColor = "#777777"
 
     val container by css {
+        boxSizing = BoxSizing.borderBox
         minWidth = 980.px
         maxWidth = 1200.px
         paddingLeft = 10.px
@@ -21,8 +25,10 @@ object Styles : StyleSheet("styles", isStatic = true) {
     }
 
     val button by css {
-        display = Display.block
+        display = Display.flex
         width = 100.pct
+        alignItems = Align.center
+        justifyContent = JustifyContent.center
         outline = Outline.none
         fontFamily = defaultFontFamily
         fontSize = 20.px
@@ -35,6 +41,7 @@ object Styles : StyleSheet("styles", isStatic = true) {
         backgroundColor = Color.white
         color = Color.black
         cursor = Cursor.pointer
+        textDecoration = TextDecoration.none
         transition("background-color", 0.2.s)
 
         hover {
@@ -128,8 +135,13 @@ object Styles : StyleSheet("styles", isStatic = true) {
     }
 
     val compact by css {
-        display = Display.inlineBlock
+        display = Display.inlineFlex
         width = LinearDimension.initial
+    }
+
+    val fullWidth by css {
+        display = Display.block
+        width = 100.pct
     }
 }
 
@@ -140,6 +152,30 @@ val globalStyles = CssBuilder(allowClasses = false).apply {
         fontFamily = Styles.defaultFontFamily
         backgroundColor = Color.white
         color = Color.black
+    }
+
+    h1 {
+        margin(0.px)
+    }
+
+    a {
+        color = Color.inherit
+        textDecoration = TextDecoration.none
+
+        visited {
+            color = Color.inherit
+        }
+    }
+
+    fontFace {
+        fontFamily = "Bebroo Sans"
+        fontWeight = FontWeight.normal
+        fontStyle = FontStyle.normal
+        put(
+            "src",
+            "url(\"/assets/fonts/BebrooSans-Regular.woff2\") format(\"woff2\")," +
+                    "url(\"/assets/fonts/BebrooSans-Regular.otf\") format(\"otf\")"
+        )
     }
 
     fontFace {
