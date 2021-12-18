@@ -74,8 +74,7 @@ fun BoardPreviewCard(
     Column(
         modifier = Modifier.height(67.dp).fillMaxWidth().clickable {
             navController.navigate("board/${boardID}")
-        },
-        verticalArrangement = Arrangement.Center
+        }, verticalArrangement = Arrangement.Center
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
@@ -88,7 +87,7 @@ fun BoardPreviewCard(
             )
             Text(
                 text = lastBoardUpdate,
-                modifier = Modifier.padding(top = 3.dp, end = 20.dp),
+                modifier = Modifier.padding(top = 3.dp, end = 17.dp),
                 fontSize = 12.sp,
             )
         }
@@ -141,6 +140,6 @@ fun MenuTopBar() {
                 )
             )
         }
-    }, backgroundColor = MaterialTheme.colors.background
+    }, backgroundColor = MaterialTheme.colors.background, elevation = 0.dp
     )
 }
