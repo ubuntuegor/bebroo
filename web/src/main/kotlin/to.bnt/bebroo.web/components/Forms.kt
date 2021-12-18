@@ -18,6 +18,7 @@ import to.bnt.bebroo.web.Config
 import to.bnt.draw.shared.apiClient.ApiClient
 import to.bnt.draw.shared.apiClient.exceptions.ApiException
 import to.bnt.draw.shared.apiClient.googleOAuthPopup
+import to.bnt.draw.shared.structures.User
 
 val authenticationForm = fc<Props> {
     val client = ApiClient(Config.API_PATH)
@@ -281,7 +282,12 @@ val createBoardForm = fc<FormProps> { props ->
     }
 }
 
-val modifyUserForm = fc<FormProps> { props ->
+external interface ModifyUserFormProps : FormProps {
+    var user: User
+    var onUserChanged: (User) -> Unit
+}
+
+val modifyUserForm = fc<ModifyUserFormProps> { props ->
     var displayName by useState("")
     var isLoading by useState(false)
 
@@ -290,7 +296,8 @@ val modifyUserForm = fc<FormProps> { props ->
         MainScope().launch {
             try {
                 props.client.modifyMe(displayName)
-                window.location.reload()
+                props.onUserChanged(props.user.copy(displayName = displayName))
+                props.onClose(event)
             } catch (e: ApiException) {
                 window.alert(e.message ?: "Ошибка сервера")
             } finally {

@@ -1,11 +1,9 @@
 package to.bnt.bebroo.web.components
 
-import kotlinx.css.Color
-import kotlinx.css.Cursor
-import kotlinx.css.cursor
+import kotlinx.css.*
 import kotlinx.css.properties.TextDecorationLine
+import kotlinx.css.properties.boxShadow
 import kotlinx.css.properties.textDecoration
-import kotlinx.css.px
 import kotlinx.html.ButtonType
 import kotlinx.html.js.onClickFunction
 import org.w3c.dom.events.Event
@@ -15,6 +13,7 @@ import react.router.dom.Link
 import styled.css
 import styled.styledA
 import styled.styledButton
+import styled.styledDiv
 import to.bnt.bebroo.web.Styles
 
 external interface ButtonProps : PropsWithChildren {
@@ -90,6 +89,30 @@ val roundedLink = fc<LinkProps> { props ->
         if (props.accent) attrs.className += " ${Styles.name}-${Styles::buttonAccent.name}"
         if (!props.wide) attrs.className += " ${Styles.name}-${Styles::compact.name}"
         attrs.to = props.to
+        props.children()
+    }
+}
+
+external interface IconButtonProps : PropsWithChildren {
+    var onClick: (Event) -> Unit
+}
+
+val iconButton = fc<IconButtonProps> { props ->
+    styledDiv {
+        css {
+            display = Display.flex
+            alignItems = Align.center
+            justifyContent = JustifyContent.center
+            width = 40.px
+            height = 40.px
+            backgroundColor = Color.white
+            borderRadius = 50.pct
+            boxShadow(Color("rgba(0,0,0,0.25)"), 0.px, 1.px, 3.px)
+            cursor = Cursor.pointer
+        }
+
+        attrs.onClickFunction = props.onClick
+
         props.children()
     }
 }

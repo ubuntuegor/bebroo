@@ -20,6 +20,7 @@ val profilePicture = fc<ProfilePictureProps> { props ->
             display = Display.flex
             alignItems = Align.center
             justifyContent = JustifyContent.center
+            flex(.0, .0, FlexBasis.auto)
             userSelect = UserSelect.none
             fontWeight = FontWeight.w600
             fontSize = 18.px

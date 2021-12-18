@@ -156,7 +156,9 @@ val homePage = fc<Props> {
         child(modal) {
             modifyUserForm {
                 attrs.client = client
+                attrs.user = user!!
                 attrs.onClose = { showingModifyUserModal = false }
+                attrs.onUserChanged = { newUser -> user = newUser }
             }
         }
     }
