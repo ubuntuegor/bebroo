@@ -155,7 +155,7 @@ fun LoginScreen(navController: NavController) {
         authError?.let {
             Text(
                 text = it,
-                modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally),
+                modifier = Modifier.padding(top = 4.dp).align(Alignment.CenterHorizontally),
                 color = Coral,
                 fontSize = 16.sp
             )
@@ -181,7 +181,7 @@ fun LoginScreen(navController: NavController) {
                 painter = painterResource(R.drawable.cutted_icon),
                 tint = Color.Unspecified,
                 contentDescription = "cutted icon",
-                modifier = Modifier.align(Alignment.BottomStart).padding(top = 70.dp).padding(start = 17.dp)
+                modifier = Modifier.align(Alignment.BottomStart).padding(top = 70.dp, start = 17.dp)
             )
             Box(
                 modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 20.dp, start = 14.dp)
