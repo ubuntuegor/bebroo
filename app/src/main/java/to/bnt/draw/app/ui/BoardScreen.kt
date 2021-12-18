@@ -75,7 +75,7 @@ fun BoardTopBar(
 @Composable
 fun DrawingBoardBottomBar(currentBrush: MutableState<Brush>) {
     Surface(elevation = 7.dp) {
-        Column(modifier = Modifier.height(95.dp).fillMaxWidth().padding(1.dp)) {
+        Column(modifier = Modifier.height(95.dp).fillMaxWidth().padding(top = 1.dp)) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 Box(modifier = Modifier.padding(start = 53.dp, end = 47.dp).fillMaxWidth()) {
                     Box(
@@ -88,7 +88,7 @@ fun DrawingBoardBottomBar(currentBrush: MutableState<Brush>) {
                     )
                 }
                 var sliderPosition by remember { mutableStateOf(0f) }
-                Row(modifier = Modifier.padding(start = 57.dp, end = 57.dp).padding(top = 11.dp)) {
+                Row(modifier = Modifier.padding(top = 11.dp,start = 57.dp, end = 57.dp)) {
                     Slider(
                         value = sliderPosition, onValueChange = {
                             sliderPosition = it
@@ -120,7 +120,7 @@ fun DrawingBoardBottomBar(currentBrush: MutableState<Brush>) {
                         Box(
                             modifier = Modifier.size(
                                 if (brush == selectedOption) {
-                                    18.dp
+                                    21.dp
                                 } else {
                                     brush.stroke.dp
                                 }
