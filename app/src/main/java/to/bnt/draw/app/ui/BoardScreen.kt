@@ -34,9 +34,7 @@ fun BoardScreen(navController: NavController, boardID: String) {
     Scaffold(
         topBar = { BoardTopBar(navController, boardID) },
         bottomBar = { DrawingBoardBottomBar(currentBrush) },
-    ) { innerPadding ->
-        Desk(currentBrush, innerPadding)
-    }
+    ) { innerPadding -> Desk(currentBrush, innerPadding) }
 }
 
 @Composable
@@ -44,9 +42,7 @@ fun BoardTopBar(
     navController: NavController, boardName: String
 ) {
     TopAppBar(title = {
-        Text(
-            text = boardName, fontSize = 20.sp, overflow = TextOverflow.Ellipsis, softWrap = true, maxLines = 1
-        )
+        Text(text = boardName, fontSize = 20.sp, overflow = TextOverflow.Ellipsis, softWrap = true, maxLines = 1)
     }, navigationIcon = {
         IconButton(onClick = { navController.popBackStack() }) {
             Icon(
@@ -88,7 +84,7 @@ fun DrawingBoardBottomBar(currentBrush: MutableState<Brush>) {
                     )
                 }
                 var sliderPosition by remember { mutableStateOf(0f) }
-                Row(modifier = Modifier.padding(top = 11.dp,start = 57.dp, end = 57.dp)) {
+                Row(modifier = Modifier.padding(top = 11.dp, start = 57.dp, end = 57.dp)) {
                     Slider(
                         value = sliderPosition, onValueChange = {
                             sliderPosition = it
@@ -104,9 +100,7 @@ fun DrawingBoardBottomBar(currentBrush: MutableState<Brush>) {
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
+            Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 var selectedOption by remember { mutableStateOf(defaultBrushes.first()) }
                 val onSelectionChange = { brush: Brush -> selectedOption = brush }
                 for (brush in defaultBrushes) {
