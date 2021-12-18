@@ -7,20 +7,31 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import to.bnt.draw.app.R
+import to.bnt.draw.app.controller.BebrooController
+import to.bnt.draw.app.theme.Coral
 import to.bnt.draw.app.theme.SuperLightGray
+import to.bnt.draw.shared.apiClient.exceptions.ApiException
 
 //TODO Move to Models
 data class PreviewCardData(
@@ -32,7 +43,7 @@ data class PreviewCardData(
 
 @Composable
 fun MenuScreen(navController: NavController) {
-    Scaffold(topBar = { MenuTopBar() }) {
+    Scaffold(topBar = { MenuTopBar(navController) }) {
         val testList = mutableListOf(
             PreviewCardData(
                 "Зачет по программированию", "Егор Спирин", painterResource(R.drawable.sample_avatar), "6:24"
@@ -115,7 +126,75 @@ fun BoardPreviewCard(
 }
 
 @Composable
-fun MenuTopBar() {
+fun MenuTopBar(navController: NavController) {
+    var isCreateButtonClicked by remember { mutableStateOf(false) }
+    var createError by remember { mutableStateOf<String?>(null) }
+    var newBoardName by remember { mutableStateOf("") }
+    if (isCreateButtonClicked) {
+        Dialog(onDismissRequest = { isCreateButtonClicked = !isCreateButtonClicked }) {
+            Card(
+                elevation = 7.dp, shape = RoundedCornerShape(8.dp)
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(R.string.new_board),
+                        modifier = Modifier.padding(top = 15.dp).align(Alignment.CenterHorizontally),
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth().padding(top = 15.dp).padding(horizontal = 12.dp)
+                            .align(Alignment.CenterHorizontally),
+                        value = newBoardName,
+                        onValueChange = {
+                            if (it.length < 200) {
+                                newBoardName = it
+                            }
+                        },
+                        label = { Text(stringResource(R.string.board_name)) },
+                        shape = RoundedCornerShape(8.dp),
+                        singleLine = true,
+                    )
+                    var isBoardCreateButtonClicked by remember { mutableStateOf(false) }
+                    Button(
+                        onClick = {
+                            MainScope().launch {
+                                try {
+                                    isBoardCreateButtonClicked = true
+                                    val boardID = BebrooController.client.createBoard(newBoardName)
+                                    navController.navigate("board/${boardID}")
+                                } catch (e: ApiException) {
+                                    isBoardCreateButtonClicked = false
+                                    createError = e.message
+                                }
+                            }
+                        },
+                        modifier = Modifier.padding(top = 20.dp).padding(horizontal = 12.dp)
+                            .align(Alignment.CenterHorizontally).height(37.dp).fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        if (isBoardCreateButtonClicked) {
+                            CircularProgressIndicator(modifier = Modifier.size(25.dp), color = Color.White)
+                        } else {
+                            Text(text = stringResource(R.string.create))
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.height(24.dp).fillMaxWidth().padding(bottom = 2.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        createError?.let {
+                            Text(
+                                text = it,
+                                color = Coral,
+                                fontSize = 16.sp,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
     TopAppBar(title = {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             Image(
@@ -126,7 +205,7 @@ fun MenuTopBar() {
         }
     }, navigationIcon = {
         IconButton(
-            onClick = { print("Bebra") },
+            onClick = { isCreateButtonClicked = !isCreateButtonClicked },
         ) {
             Icon(Icons.Default.Add, contentDescription = "plus sign")
         }

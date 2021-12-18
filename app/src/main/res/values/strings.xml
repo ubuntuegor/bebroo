@@ -10,4 +10,7 @@
     <string name="interactive_desk_for">Интерактивная доска для</string>
     <string name="drawing">рисования</string>
     <string name="together">вместе</string>
+    <string name="board_name">Название</string>
+    <string name="new_board">Новая доска</string>
+    <string name="create">Создать</string>
 </resources>
