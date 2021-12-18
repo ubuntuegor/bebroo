@@ -1,25 +1,22 @@
 package to.bnt.bebroo.web.routes
 
+import csstype.important
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.css.*
-import kotlinx.css.properties.boxShadow
 import kotlinx.html.id
 import org.w3c.dom.events.Event
 import org.w3c.dom.url.URLSearchParams
-import react.Props
+import react.*
 import react.dom.attrs
 import react.dom.canvas
 import react.dom.img
-import react.fc
 import react.router.dom.Link
 import react.router.dom.useHistory
 import react.router.dom.useLocation
 import react.router.dom.useParams
-import react.useEffectOnce
-import react.useState
 import styled.*
 import to.bnt.bebroo.web.Config
 import to.bnt.bebroo.web.Styles
@@ -73,6 +70,7 @@ val boardPage = fc<Props> {
         client.token = token
         MainScope().launch {
             try {
+                delay(500)
                 board = client.getBoard(uuid)
                 val canvas = JsCanvas(canvasId)
                 val drawingBoard = DrawingBoard(canvas)
@@ -147,7 +145,7 @@ val boardPage = fc<Props> {
 }
 
 external interface UserListingProps : Props {
-    var user: User
+    var user: User?
 }
 
 val userListing = fc<UserListingProps> { props ->
@@ -170,7 +168,7 @@ val userListing = fc<UserListingProps> { props ->
                 textOverflow = TextOverflow.ellipsis
             }
 
-            +props.user.displayName
+            +(props.user?.displayName ?: "Неизвестный пользователь")
         }
     }
 }
@@ -183,17 +181,14 @@ external interface MainCardProps : Props {
 val mainCard = fc<MainCardProps> { props ->
     styledDiv {
         css {
+            +Styles.card
             display = Display.flex
             flexDirection = FlexDirection.column
             width = 300.px
             maxHeight = 320.px
-            padding(20.px)
-            borderRadius = 26.px
-            boxShadow(Color("rgba(0,0,0,0.4)"), 0.px, 1.px, 3.px)
-            backgroundColor = Color.white
 
             props.usersConnected?.let {
-                paddingBottom = 0.px
+                paddingBottom = important(0.px)
             }
 
             children {
@@ -257,6 +252,7 @@ val mainCard = fc<MainCardProps> { props ->
 
                 for (user in it) {
                     child(userListing) {
+                        attrs.key = user.id.toString()
                         attrs.user = user
                     }
                 }
@@ -266,8 +262,8 @@ val mainCard = fc<MainCardProps> { props ->
 }
 
 external interface MenuButtonsProps : Props {
-    var showingPanel: ShowingPanel
-    var onPanelChanged: (ShowingPanel) -> Unit
+    var showingPanel: ShowingPanel?
+    var onPanelChanged: ((ShowingPanel) -> Unit)?
 }
 
 val menuButtons = fc<MenuButtonsProps> { props ->
@@ -286,7 +282,7 @@ val menuButtons = fc<MenuButtonsProps> { props ->
             attrs.onClick = {
                 val newPanel =
                     if (isActive) ShowingPanel.None else ShowingPanel.SharePanel
-                props.onPanelChanged(newPanel)
+                props.onPanelChanged?.let { it(newPanel) }
             }
 
             shareIcon(20, getColor(isActive))
@@ -297,7 +293,7 @@ val menuButtons = fc<MenuButtonsProps> { props ->
             attrs.onClick = {
                 val newPanel =
                     if (isActive) ShowingPanel.None else ShowingPanel.HelpPanel
-                props.onPanelChanged(newPanel)
+                props.onPanelChanged?.let { it(newPanel) }
             }
 
             helpIcon(20, getColor(isActive))

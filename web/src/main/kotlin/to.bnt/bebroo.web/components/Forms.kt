@@ -203,8 +203,8 @@ val authenticationForm = fc<Props> {
 }
 
 external interface FormProps : Props {
-    var client: ApiClient
-    var onClose: (Event) -> Unit
+    var client: ApiClient?
+    var onClose: ((Event) -> Unit)?
 }
 
 val createBoardForm = fc<FormProps> { props ->
@@ -216,7 +216,7 @@ val createBoardForm = fc<FormProps> { props ->
         isLoading = true
         MainScope().launch {
             try {
-                val uuid = props.client.createBoard(name)
+                val uuid = props.client!!.createBoard(name)
                 history.push("/board/$uuid")
             } catch (e: ApiException) {
                 window.alert(e.message ?: "Ошибка сервера")
@@ -283,8 +283,8 @@ val createBoardForm = fc<FormProps> { props ->
 }
 
 external interface ModifyUserFormProps : FormProps {
-    var user: User
-    var onUserChanged: (User) -> Unit
+    var user: User?
+    var onUserChanged: ((User) -> Unit)?
 }
 
 val modifyUserForm = fc<ModifyUserFormProps> { props ->
@@ -295,9 +295,9 @@ val modifyUserForm = fc<ModifyUserFormProps> { props ->
         isLoading = true
         MainScope().launch {
             try {
-                props.client.modifyMe(displayName)
-                props.onUserChanged(props.user.copy(displayName = displayName))
-                props.onClose(event)
+                props.client!!.modifyMe(displayName)
+                props.user?.let { user -> props.onUserChanged?.let { it(user.copy(displayName = displayName)) } }
+                props.onClose?.let { it(event) }
             } catch (e: ApiException) {
                 window.alert(e.message ?: "Ошибка сервера")
             } finally {

@@ -13,12 +13,12 @@ import styled.styledDiv
 import to.bnt.bebroo.web.Styles
 
 external interface TextFieldProps : Props {
-    var title: String
-    var value: String
-    var isPassword: Boolean
-    var isRequired: Boolean
-    var maxCharacters: Int
-    var onChange: (Event) -> Unit
+    var title: String?
+    var value: String?
+    var isPassword: Boolean?
+    var isRequired: Boolean?
+    var maxCharacters: Int?
+    var onChange: ((Event) -> Unit)?
 }
 
 val roundedTextField = fc<TextFieldProps> { props ->
@@ -26,16 +26,16 @@ val roundedTextField = fc<TextFieldProps> { props ->
         css {
             +Styles.roundedTextInput
         }
-        input(type = if (props.isPassword) InputType.password else InputType.text) {
+        input(type = if (props.isPassword == true) InputType.password else InputType.text) {
             attrs {
-                maxLength = props.maxCharacters?.toString()
-                required = props.isRequired
-                value = props.value
-                onChangeFunction = props.onChange
+                props.maxCharacters?.let { maxLength = it.toString() }
+                required = props.isRequired == true
+                value = props.value!!
+                onChangeFunction = props.onChange!!
             }
         }
         label {
-            +props.title
+            +props.title!!
         }
     }
 }

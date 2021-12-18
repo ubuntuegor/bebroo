@@ -17,26 +17,26 @@ import styled.styledDiv
 import to.bnt.bebroo.web.Styles
 
 external interface ButtonProps : PropsWithChildren {
-    var isSubmit: Boolean
-    var compact: Boolean
-    var accent: Boolean
-    var loading: Boolean
-    var disabled: Boolean
-    var onClick: (Event) -> Unit
+    var isSubmit: Boolean?
+    var compact: Boolean?
+    var accent: Boolean?
+    var loading: Boolean?
+    var disabled: Boolean?
+    var onClick: ((Event) -> Unit)?
 }
 
 val roundedButton = fc<ButtonProps> { props ->
     styledButton {
         css {
             +Styles.button
-            if (props.accent) +Styles.buttonAccent
-            if (props.compact) +Styles.compact
+            if (props.accent == true) +Styles.buttonAccent
+            if (props.compact == true) +Styles.compact
         }
-        attrs.type = if (props.isSubmit) ButtonType.submit else ButtonType.button
-        attrs.disabled = props.loading || props.disabled
-        attrs.onClickFunction = props.onClick
-        if (props.loading) {
-            val spinnerColor = if (props.accent) Color.white else Color.black
+        attrs.type = if (props.isSubmit == true) ButtonType.submit else ButtonType.button
+        attrs.disabled = props.loading == true || props.disabled == true
+        props.onClick?.let { attrs.onClickFunction = it }
+        if (props.loading == true) {
+            val spinnerColor = if (props.accent == true) Color.white else Color.black
             spinner(spinnerColor, 30.px)
         } else {
             props.children()
@@ -45,19 +45,19 @@ val roundedButton = fc<ButtonProps> { props ->
 }
 
 external interface TextButtonProps : PropsWithChildren {
-    var accent: Boolean
-    val disabled: Boolean
-    var onClick: (Event) -> Unit
+    var accent: Boolean?
+    val disabled: Boolean?
+    var onClick: ((Event) -> Unit)?
 }
 
 val textButton = fc<TextButtonProps> { props ->
     styledButton {
         css {
             +Styles.textButton
-            if (props.accent) +Styles.textButtonAccent
+            if (props.accent == true) +Styles.textButtonAccent
         }
-        attrs.disabled = props.disabled
-        attrs.onClickFunction = props.onClick
+        attrs.disabled = props.disabled == true
+        props.onClick?.let { attrs.onClickFunction = it }
 
         props.children()
     }
@@ -71,30 +71,30 @@ val textButtonSmall = fc<TextButtonProps> { props ->
                 textDecoration(TextDecorationLine.underline)
             }
         }
-        attrs.onClickFunction = props.onClick
+        props.onClick?.let { attrs.onClickFunction = it }
 
         props.children()
     }
 }
 
 external interface LinkProps : PropsWithChildren {
-    var to: String
-    var wide: Boolean
-    var accent: Boolean
+    var to: String?
+    var wide: Boolean?
+    var accent: Boolean?
 }
 
 val roundedLink = fc<LinkProps> { props ->
     Link {
         attrs.className = "${Styles.name}-${Styles::button.name}"
-        if (props.accent) attrs.className += " ${Styles.name}-${Styles::buttonAccent.name}"
-        if (!props.wide) attrs.className += " ${Styles.name}-${Styles::compact.name}"
-        attrs.to = props.to
+        if (props.accent == true) attrs.className += " ${Styles.name}-${Styles::buttonAccent.name}"
+        if (props.wide != true) attrs.className += " ${Styles.name}-${Styles::compact.name}"
+        props.to?.let { attrs.to = it }
         props.children()
     }
 }
 
 external interface IconButtonProps : PropsWithChildren {
-    var onClick: (Event) -> Unit
+    var onClick: ((Event) -> Unit)?
 }
 
 val iconButton = fc<IconButtonProps> { props ->
@@ -111,7 +111,7 @@ val iconButton = fc<IconButtonProps> { props ->
             cursor = Cursor.pointer
         }
 
-        attrs.onClickFunction = props.onClick
+        props.onClick?.let { attrs.onClickFunction = it }
 
         props.children()
     }

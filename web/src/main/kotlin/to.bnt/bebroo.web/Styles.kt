@@ -2,6 +2,7 @@ package to.bnt.bebroo.web
 
 import kotlinx.css.*
 import kotlinx.css.properties.TextDecoration
+import kotlinx.css.properties.boxShadow
 import kotlinx.css.properties.s
 import kotlinx.css.properties.transition
 import styled.StyleSheet
@@ -22,6 +23,13 @@ object Styles : StyleSheet("styles", isStatic = true) {
         paddingLeft = 10.px
         paddingRight = 10.px
         margin = "auto"
+    }
+
+    val card by css {
+        backgroundColor = Color.white
+        padding(20.px)
+        borderRadius = 26.px
+        boxShadow(Color("rgba(0,0,0,0.4)"), 0.px, 1.px, 3.px)
     }
 
     val button by css {
@@ -69,10 +77,10 @@ object Styles : StyleSheet("styles", isStatic = true) {
         backgroundColor = Color.transparent
         color = Color.black
         cursor = Cursor.pointer
-        transition("color", 0.2.s)
+        transition("color", 0.1.s)
 
         hover {
-            color = Color("#3c3c3c")
+            color = Color("#555555")
         }
     }
 

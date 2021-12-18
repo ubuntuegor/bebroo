@@ -1,12 +1,15 @@
 package to.bnt.bebroo.web.routes
 
+import csstype.important
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*
-import kotlinx.css.properties.*
-import kotlinx.html.js.onClickFunction
+import kotlinx.css.properties.s
+import kotlinx.css.properties.transform
+import kotlinx.css.properties.transition
+import kotlinx.css.properties.translateY
 import org.w3c.dom.events.Event
 import react.*
 import react.dom.br
@@ -119,28 +122,14 @@ val homePage = fc<Props> {
             } else {
                 for (board in it) {
                     child(boardListElement) {
+                        attrs.currentUser = user
                         attrs.board = board
                     }
                 }
             }
         } ?: spinner(Color.black, 50.px)
 
-        styledP {
-            css {
-                marginTop = 30.px
-                textAlign = TextAlign.center
-                fontSize = 13.px
-                color = Color(Styles.neutralTextColor)
-            }
-            +"Bebroo Team | SPbU"
-            br {}
-            styledSpan {
-                css {
-                    fontWeight = FontWeight.bold
-                }
-                +"2021"
-            }
-        }
+        copyright()
     }
 
     // modal
@@ -165,32 +154,34 @@ val homePage = fc<Props> {
 }
 
 fun RBuilder.createButton(onClick: (Event) -> Unit) {
-    styledDiv {
-        attrs.onClickFunction = onClick
-        css {
-            display = Display.flex
-            alignItems = Align.center
-            fontSize = 13.px
-            fontWeight = FontWeight.w500
-            cursor = Cursor.pointer
-        }
+    textButton {
+        attrs.onClick = onClick
 
-        styledImg("Plus icon", "/assets/images/plus_icon.svg") {
+        styledDiv {
             css {
-                marginRight = 16.px
+                display = Display.flex
+                alignItems = Align.center
+                fontSize = 13.px
+                fontWeight = FontWeight.w500
             }
-            attrs.width = "28px"
-            attrs.height = "28px"
-        }
 
-        +"Создать доску"
+            styledImg("Plus icon", "/assets/images/plus_icon.svg") {
+                css {
+                    marginRight = 16.px
+                }
+                attrs.width = "28px"
+                attrs.height = "28px"
+            }
+
+            +"Создать доску"
+        }
     }
 }
 
 external interface UserManageProps : Props {
-    var user: User
-    var onModifyUserClicked: (Event) -> Unit
-    var onLogoutClicked: (Event) -> Unit
+    var user: User?
+    var onModifyUserClicked: ((Event) -> Unit)?
+    var onLogoutClicked: ((Event) -> Unit)?
 }
 
 val userManage = fc<UserManageProps> { props ->
@@ -216,7 +207,7 @@ val userManage = fc<UserManageProps> { props ->
                     overflow = Overflow.hidden
                 }
 
-                +props.user.displayName
+                +(props.user?.displayName ?: "Неизвестный пользователь")
             }
 
             styledDiv {
@@ -243,25 +234,29 @@ val userManage = fc<UserManageProps> { props ->
 }
 
 external interface BoardListElementProps : Props {
-    var board: Board
+    var currentUser: User?
+    var board: Board?
 }
 
 val boardListElement = fc<BoardListElementProps> { props ->
+    val isUsersBoard = props.currentUser?.let { user ->
+        props.board?.let { user.id == it.creator.id }
+    } ?: false
+
     Link {
         attrs.className = "${Styles.name}-${Styles::fullWidth.name}"
-        attrs.to = "/board/${props.board.uuid}"
+        attrs.to = "/board/${props.board?.uuid}"
 
         styledDiv {
             css {
+                +Styles.card
                 boxSizing = BoxSizing.borderBox
                 width = 100.pct
                 display = Display.flex
                 alignItems = Align.center
                 justifyContent = JustifyContent.spaceBetween
-                padding(20.px, 40.px)
-                borderRadius = 100.px
-                backgroundColor = Color.white
-                boxShadow(Color("rgba(0,0,0,0.4)"), 0.px, 1.px, 3.px)
+                padding(20.px, important(40.px))
+                borderRadius = important(50.px)
                 transition("background-color", 0.2.s)
 
                 active {
@@ -284,7 +279,7 @@ val boardListElement = fc<BoardListElementProps> { props ->
                         textOverflow = TextOverflow.ellipsis
                     }
 
-                    +props.board.name
+                    +(props.board?.name ?: "Неизвестная доска")
                 }
                 styledDiv {
                     css {
@@ -292,19 +287,20 @@ val boardListElement = fc<BoardListElementProps> { props ->
                         alignItems = Align.center
                     }
 
-                    styledDiv {
-                        css {
-                            marginRight = 8.px
-                            flex(.0, .0, FlexBasis.auto)
-                            width = 21.px
-                            height = 21.px
-                            borderRadius = 50.pct
-                            backgroundColor = Color("#969696")
-                            backgroundSize = "cover"
-                            backgroundPosition = "center"
-                            props.board.creator.avatarUrl?.let { backgroundImage = Image("url(\"$it\")") }
+                    if (!isUsersBoard)
+                        styledDiv {
+                            css {
+                                marginRight = 8.px
+                                flex(.0, .0, FlexBasis.auto)
+                                width = 21.px
+                                height = 21.px
+                                borderRadius = 50.pct
+                                backgroundColor = Color("#969696")
+                                backgroundSize = "cover"
+                                backgroundPosition = "center"
+                                props.board?.creator?.avatarUrl?.let { backgroundImage = Image("url(\"$it\")") }
+                            }
                         }
-                    }
 
                     styledSpan {
                         css {
@@ -314,12 +310,15 @@ val boardListElement = fc<BoardListElementProps> { props ->
                             overflow = Overflow.hidden
                             textOverflow = TextOverflow.ellipsis
                         }
-                        +props.board.creator.displayName
+                        if (isUsersBoard)
+                            +"Ваша доска"
+                        else
+                            +(props.board?.creator?.displayName ?: "Неизвестный пользователь")
                     }
                 }
             }
 
-            props.board.timestamp?.let {
+            props.board?.timestamp?.let {
                 styledSpan {
                     css {
                         fontSize = 14.px
@@ -329,6 +328,25 @@ val boardListElement = fc<BoardListElementProps> { props ->
                     +formatTimestamp(it)
                 }
             }
+        }
+    }
+}
+
+fun RBuilder.copyright() {
+    styledP {
+        css {
+            marginTop = 30.px
+            textAlign = TextAlign.center
+            fontSize = 13.px
+            color = Color(Styles.neutralTextColor)
+        }
+        +"Bebroo Team | SPbU"
+        br {}
+        styledSpan {
+            css {
+                fontWeight = FontWeight.bold
+            }
+            +"2021"
         }
     }
 }

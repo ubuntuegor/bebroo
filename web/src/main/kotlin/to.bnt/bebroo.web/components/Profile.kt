@@ -8,7 +8,7 @@ import styled.styledDiv
 import to.bnt.draw.shared.structures.User
 
 external interface ProfilePictureProps : Props {
-    var user: User
+    var user: User?
 }
 
 val profilePicture = fc<ProfilePictureProps> { props ->
@@ -28,10 +28,10 @@ val profilePicture = fc<ProfilePictureProps> { props ->
             backgroundColor = Color("#777777")
             backgroundSize = "cover"
             backgroundPosition = "center"
-            props.user.avatarUrl?.let { backgroundImage = Image("url(\"$it\")") }
+            props.user?.avatarUrl?.let { backgroundImage = Image("url(\"$it\")") }
         }
 
-        props.user.avatarUrl ?: props.user.displayName.firstOrNull()?.let {
+        props.user?.avatarUrl ?: props.user?.displayName?.firstOrNull()?.let {
             +it.toString()
         }
     }
