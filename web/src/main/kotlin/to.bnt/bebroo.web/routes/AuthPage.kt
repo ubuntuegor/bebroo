@@ -36,7 +36,7 @@ val authPage = fc<Props> {
         document.title = "Вход - ${Config.APP_NAME}"
     }
 
-    pageHeader()
+    child(pageHeader)
 
     styledMain {
         css {
@@ -45,8 +45,8 @@ val authPage = fc<Props> {
             marginBottom = 100.px
             display = Display.flex
         }
-        banner()
-        authenticationForm()
+        child(banner)
+        child(authenticationForm)
     }
 }
 
