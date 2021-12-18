@@ -13,4 +13,9 @@
     <string name="board_name">Название</string>
     <string name="new_board">Новая доска</string>
     <string name="create">Создать</string>
+    <string name="change_name">Сменить имя</string>
+    <string name="exit">Выйти</string>
+    <string name="new_name">Новое имя</string>
+    <string name="name">Имя</string>
+    <string name="change">Сменить</string>
 </resources>

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +30,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import to.bnt.draw.app.R
 import to.bnt.draw.app.controller.BebrooController
+import to.bnt.draw.app.controller.UserPreferencesManager
 import to.bnt.draw.app.theme.Coral
 import to.bnt.draw.app.theme.SuperLightGray
 import to.bnt.draw.shared.apiClient.exceptions.ApiException
@@ -130,11 +132,11 @@ fun MenuTopBar(navController: NavController) {
     var isCreateButtonClicked by remember { mutableStateOf(false) }
     var createError by remember { mutableStateOf<String?>(null) }
     var newBoardName by remember { mutableStateOf("") }
+    var isSettingsExpanded by remember { mutableStateOf(false) }
+
     if (isCreateButtonClicked) {
         Dialog(onDismissRequest = { isCreateButtonClicked = !isCreateButtonClicked }) {
-            Card(
-                elevation = 7.dp, shape = RoundedCornerShape(8.dp)
-            ) {
+            Card(elevation = 7.dp, shape = RoundedCornerShape(8.dp)) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = stringResource(R.string.new_board),
@@ -195,6 +197,92 @@ fun MenuTopBar(navController: NavController) {
             }
         }
     }
+
+    var isChangeNameButtonCLicked by remember { mutableStateOf(false) }
+    var changeNameError by remember { mutableStateOf<String?>(null) }
+    var newName by remember { mutableStateOf("") }
+
+    if (isChangeNameButtonCLicked) {
+        Dialog(onDismissRequest = { isChangeNameButtonCLicked = !isChangeNameButtonCLicked }) {
+            Card(elevation = 7.dp, shape = RoundedCornerShape(8.dp)) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(R.string.new_name),
+                        modifier = Modifier.padding(top = 15.dp).align(Alignment.CenterHorizontally),
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth().padding(top = 15.dp).padding(horizontal = 12.dp)
+                            .align(Alignment.CenterHorizontally),
+                        value = newName,
+                        onValueChange = {
+                            if (it.length < 100) {
+                                newName = it
+                            }
+                        },
+                        label = { Text(stringResource(R.string.name)) },
+                        shape = RoundedCornerShape(8.dp),
+                        singleLine = true,
+                    )
+                    var isChangeButtonClicked by remember { mutableStateOf(false) }
+                    Button(
+                        onClick = {
+                            MainScope().launch {
+                                try {
+                                    isChangeButtonClicked = !isChangeButtonClicked
+                                    BebrooController.client.modifyMe(newName)
+                                    isChangeNameButtonCLicked = !isChangeNameButtonCLicked
+                                    isSettingsExpanded = !isSettingsExpanded
+                                } catch (e: ApiException) {
+                                    isChangeButtonClicked = !isChangeButtonClicked
+                                    changeNameError = e.message
+                                }
+                            }
+                        },
+                        modifier = Modifier.padding(top = 20.dp).padding(horizontal = 12.dp)
+                            .align(Alignment.CenterHorizontally).height(37.dp).fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        if (isChangeButtonClicked) {
+                            CircularProgressIndicator(modifier = Modifier.size(25.dp), color = Color.White)
+                        } else {
+                            Text(text = stringResource(R.string.change))
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.height(24.dp).fillMaxWidth().padding(bottom = 2.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        changeNameError?.let {
+                            Text(
+                                text = it,
+                                color = Coral,
+                                fontSize = 16.sp,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxWidth().wrapContentSize(Alignment.TopEnd).padding(top = 55.dp, end = 12.dp)) {
+        val userPreferencesManager = UserPreferencesManager(LocalContext.current)
+        DropdownMenu(
+            expanded = isSettingsExpanded,
+            onDismissRequest = { isSettingsExpanded = !isSettingsExpanded },
+        ) {
+            DropdownMenuItem(onClick = { isChangeNameButtonCLicked = !isChangeNameButtonCLicked }) {
+                Text(stringResource(R.string.change_name))
+            }
+            Divider()
+            DropdownMenuItem(onClick = {
+                MainScope().launch { userPreferencesManager.cleanUserPreferences() }
+                navController.popBackStack()
+            }) { Text(stringResource(R.string.exit)) }
+        }
+    }
     TopAppBar(title = {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             Image(
@@ -206,17 +294,13 @@ fun MenuTopBar(navController: NavController) {
     }, navigationIcon = {
         IconButton(
             onClick = { isCreateButtonClicked = !isCreateButtonClicked },
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "plus sign")
-        }
+        ) { Icon(Icons.Default.Add, contentDescription = "plus sign") }
     }, actions = {
-        IconButton(onClick = { print("Bebra") }) {
+        IconButton(onClick = { isSettingsExpanded = !isSettingsExpanded }) {
             Image(
                 painterResource(R.drawable.sample_avatar),
                 contentDescription = "sample avatar",
-                modifier = Modifier.size(width = 32.dp, height = 32.dp).clip(
-                    CircleShape
-                )
+                modifier = Modifier.size(width = 32.dp, height = 32.dp).clip(CircleShape)
             )
         }
     }, backgroundColor = MaterialTheme.colors.background, elevation = 0.dp
