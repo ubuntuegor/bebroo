@@ -27,9 +27,9 @@ fun BebrooApp() {
             SideEffect { systemUiController.setSystemBarsColor(color = Color.White, darkIcons = true) }
         }
 
-        val userPreferencesStorage = UserPreferencesManager(LocalContext.current)
         val settingsStoreState =
-            userPreferencesStorage.getPreferencesFromDataStore().collectAsState(initial = SettingsStore())
+            UserPreferencesManager(LocalContext.current).getPreferencesFromDataStore()
+                .collectAsState(initial = SettingsStore())
         BebrooController.client.token = settingsStoreState.value.token
 
         val navController = rememberNavController()
