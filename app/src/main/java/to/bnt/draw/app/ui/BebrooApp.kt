@@ -27,19 +27,16 @@ fun BebrooApp() {
             SideEffect { systemUiController.setSystemBarsColor(color = Color.White, darkIcons = true) }
         }
 
-        val settingsStoreState =
-            UserPreferencesManager(LocalContext.current).getPreferencesFromDataStore()
-                .collectAsState(initial = SettingsStore())
+        val settingsStoreState = UserPreferencesManager(LocalContext.current).getPreferencesFromDataStore()
+            .collectAsState(initial = SettingsStore())
         BebrooController.client.token = settingsStoreState.value.token
-
         val navController = rememberNavController()
         if (settingsStoreState.value.token == null) {
             NavHost(navController = navController, startDestination = "login") {
                 composable("login") { LoginScreen(navController) }
                 composable("menu") { MenuScreen(navController) }
                 composable(
-                    route = "board/{id}",
-                    arguments = listOf(navArgument("id") { type = NavType.StringType })
+                    route = "board/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })
                 ) { entry ->
                     entry.arguments?.getString("id")?.let {
                         BoardScreen(navController, it)
@@ -50,8 +47,7 @@ fun BebrooApp() {
             NavHost(navController = navController, startDestination = "menu") {
                 composable("menu") { MenuScreen(navController) }
                 composable(
-                    route = "board/{id}",
-                    arguments = listOf(navArgument("id") { type = NavType.StringType })
+                    route = "board/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })
                 ) { entry ->
                     entry.arguments?.getString("id")?.let {
                         BoardScreen(navController, it)
