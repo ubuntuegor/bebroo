@@ -1,5 +1,6 @@
 package to.bnt.bebroo.web.components
 
+import csstype.important
 import kotlinx.css.*
 import kotlinx.css.properties.Timing
 import kotlinx.css.properties.boxShadow
@@ -9,6 +10,7 @@ import react.fc
 import styled.animation
 import styled.css
 import styled.styledDiv
+import to.bnt.bebroo.web.Styles
 
 val modal = fc<PropsWithChildren> { props ->
     styledDiv {
@@ -31,12 +33,10 @@ val modal = fc<PropsWithChildren> { props ->
 
         styledDiv {
             css {
+                +Styles.card
                 margin(150.px, LinearDimension.auto)
-                width = 800.px
-                backgroundColor = Color.white
-                borderRadius = 26.px
-                padding(20.px)
-                boxShadow(Color("rgba(0, 0, 0, 0.4)"), 0.px, 1.px, 15.px)
+                width = 500.px
+                boxShadow(Color("rgba(0, 0, 0, 0.4)"), 0.px, 1.px, important(15.px))
             }
 
             props.children()

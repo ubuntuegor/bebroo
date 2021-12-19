@@ -254,21 +254,10 @@ val createBoardForm = fc<FormProps> { props ->
         styledDiv {
             css {
                 display = Display.flex
-                flexDirection = FlexDirection.column
                 alignItems = Align.center
-                gap = 20.px
+                justifyContent = JustifyContent.end
+                gap = 40.px
                 marginTop = 15.px
-                marginBottom = 15.px
-            }
-
-            roundedButton {
-                attrs {
-                    isSubmit = true
-                    accent = true
-                    loading = isLoading
-                }
-
-                +"Создать"
             }
 
             textButton {
@@ -277,6 +266,17 @@ val createBoardForm = fc<FormProps> { props ->
                 }
 
                 +"Отмена"
+            }
+
+            roundedButton {
+                attrs {
+                    isSubmit = true
+                    accent = true
+                    compact = true
+                    loading = isLoading
+                }
+
+                +"Создать"
             }
         }
     }
@@ -334,21 +334,10 @@ val modifyUserForm = fc<ModifyUserFormProps> { props ->
         styledDiv {
             css {
                 display = Display.flex
-                flexDirection = FlexDirection.column
                 alignItems = Align.center
-                gap = 20.px
+                justifyContent = JustifyContent.end
+                gap = 40.px
                 marginTop = 15.px
-                marginBottom = 15.px
-            }
-
-            roundedButton {
-                attrs {
-                    isSubmit = true
-                    accent = true
-                    loading = isLoading
-                }
-
-                +"Изменить"
             }
 
             textButton {
@@ -357,6 +346,17 @@ val modifyUserForm = fc<ModifyUserFormProps> { props ->
                 }
 
                 +"Отмена"
+            }
+
+            roundedButton {
+                attrs {
+                    isSubmit = true
+                    accent = true
+                    compact = true
+                    loading = isLoading
+                }
+
+                +"Изменить"
             }
         }
     }

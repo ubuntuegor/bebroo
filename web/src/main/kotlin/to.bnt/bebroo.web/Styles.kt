@@ -1,11 +1,9 @@
 package to.bnt.bebroo.web
 
 import kotlinx.css.*
-import kotlinx.css.properties.TextDecoration
-import kotlinx.css.properties.boxShadow
-import kotlinx.css.properties.s
-import kotlinx.css.properties.transition
+import kotlinx.css.properties.*
 import styled.StyleSheet
+import styled.animation
 
 object Styles : StyleSheet("styles", isStatic = true) {
     const val defaultFontFamily = "Inter, Roboto, system-ui, sans-serif"
@@ -25,7 +23,15 @@ object Styles : StyleSheet("styles", isStatic = true) {
         margin = "auto"
     }
 
+    val boardControl by css {
+        boxSizing = BoxSizing.borderBox
+        backgroundColor = Color.white
+        borderRadius = 26.px
+        boxShadow(Color("rgba(0,0,0,0.3)"), 0.px, 1.px, 2.px)
+    }
+
     val card by css {
+        boxSizing = BoxSizing.borderBox
         backgroundColor = Color.white
         padding(20.px)
         borderRadius = 26.px
@@ -142,6 +148,83 @@ object Styles : StyleSheet("styles", isStatic = true) {
         }
     }
 
+    val minimalTextInput by css {
+        position = Position.relative
+        width = 100.pct
+
+        input {
+            display = Display.block
+            width = 100.pct
+            padding(4.px, 0.px)
+            fontFamily = defaultFontFamily
+            fontSize = 13.px
+            backgroundColor = Color.transparent
+            color = Color("#3c3c3c")
+            border = "none"
+            borderBottom = "solid 1px #d3d3d3"
+            outline = Outline.none
+            transition("border", 0.1.s)
+
+            focus {
+                borderBottom = "solid 1px $accentColorLight"
+            }
+        }
+
+        label {
+            fontSize = 11.px
+            marginBottom = 2.px
+            color = Color("#969696")
+        }
+    }
+
+    val customCheckBox by css {
+        position = Position.relative
+        width = 34.px
+        height = 20.px
+        cursor = Cursor.pointer
+
+        input {
+            position = Position.absolute
+            width = 0.px
+            height = 0.px
+            opacity = 0
+            border = "none"
+
+            checked {
+                sibling(".checkbox-bar") {
+                    backgroundColor = Color(accentColorLight)
+                }
+                sibling(".checkbox-head") {
+                    left = 14.px
+                    backgroundColor = Color(accentColor)
+                }
+            }
+        }
+
+        children(".checkbox-bar") {
+            position = Position.absolute
+            top = 3.px
+            left = 0.px
+            width = 100.pct
+            height = 14.px
+            backgroundColor = Color("#d3d3d3")
+            borderRadius = 14.px
+            transition("background-color", 0.2.s)
+        }
+
+        children(".checkbox-head") {
+            position = Position.absolute
+            top = 0.px
+            left = 0.px
+            width = 20.px
+            height = 20.px
+            backgroundColor = Color.white
+            borderRadius = 50.pct
+            boxShadow(Color("rgba(0,0,0,0.2)"), 0.px, 1.px, 2.px)
+            transition("all", 0.2.s)
+        }
+    }
+
     val compact by css {
         display = Display.inlineFlex
         width = LinearDimension.initial
@@ -150,6 +233,17 @@ object Styles : StyleSheet("styles", isStatic = true) {
     val fullWidth by css {
         display = Display.block
         width = 100.pct
+    }
+
+    val fadeIn by css {
+        animation(0.2.s, Timing.ease) {
+            from {
+                opacity = 0
+            }
+            to {
+                opacity = 1
+            }
+        }
     }
 }
 

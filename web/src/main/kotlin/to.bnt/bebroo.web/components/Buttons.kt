@@ -1,9 +1,7 @@
 package to.bnt.bebroo.web.components
 
 import kotlinx.css.*
-import kotlinx.css.properties.TextDecorationLine
-import kotlinx.css.properties.boxShadow
-import kotlinx.css.properties.textDecoration
+import kotlinx.css.properties.*
 import kotlinx.html.ButtonType
 import kotlinx.html.js.onClickFunction
 import org.w3c.dom.events.Event
@@ -109,6 +107,11 @@ val iconButton = fc<IconButtonProps> { props ->
             borderRadius = 50.pct
             boxShadow(Color("rgba(0,0,0,0.25)"), 0.px, 1.px, 3.px)
             cursor = Cursor.pointer
+            transition("background-color", 0.2.s)
+
+            active {
+                backgroundColor = Color("#ebebeb")
+            }
         }
 
         props.onClick?.let { attrs.onClickFunction = it }
