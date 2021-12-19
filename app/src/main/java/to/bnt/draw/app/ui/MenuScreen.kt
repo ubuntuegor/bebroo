@@ -204,7 +204,7 @@ fun MenuSettings(
                             .align(Alignment.CenterHorizontally),
                         value = newBoardName,
                         onValueChange = {
-                            if (it.length < 200) {
+                            if (it.length <= 200) {
                                 newBoardName = it
                             }
                         },
@@ -272,7 +272,7 @@ fun MenuSettings(
                             .align(Alignment.CenterHorizontally),
                         value = newName,
                         onValueChange = {
-                            if (it.length < 100) {
+                            if (it.length <= 100) {
                                 newName = it
                             }
                         },

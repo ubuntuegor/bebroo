@@ -253,7 +253,7 @@ fun BoardSettingsMenu(isBoardSettingsExpanded: MutableState<Boolean>, boardInfo:
                             .align(Alignment.CenterHorizontally),
                         value = newBoardName,
                         onValueChange = {
-                            if (it.length < 200) {
+                            if (it.length <= 200) {
                                 newBoardName = it
                             }
                         },

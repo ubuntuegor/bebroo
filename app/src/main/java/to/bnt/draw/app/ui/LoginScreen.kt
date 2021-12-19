@@ -39,8 +39,6 @@ import to.bnt.draw.app.theme.SuperLightGray
 import to.bnt.draw.app.theme.WhiteSemiTransparent
 import to.bnt.draw.shared.apiClient.exceptions.ApiException
 
-//TODO Ограничить кол-во символов в логине имени и тд
-
 @Composable
 fun LoginScreen(navController: NavController) {
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
@@ -56,7 +54,11 @@ fun LoginScreen(navController: NavController) {
         if (isRegisterButtonClicked) {
             OutlinedTextField(
                 value = username,
-                onValueChange = { username = it },
+                onValueChange = {
+                    if (it.length <= 100) {
+                        username = it
+                    }
+                },
                 modifier = Modifier.padding(top = 40.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
                 label = { Text(stringResource(R.string.nickname)) },
                 singleLine = true,
@@ -66,7 +68,11 @@ fun LoginScreen(navController: NavController) {
         var login by remember { mutableStateOf("") }
         OutlinedTextField(
             value = login,
-            onValueChange = { login = it },
+            onValueChange = {
+                if (it.length <= 100) {
+                    login = it
+                }
+            },
             modifier = Modifier.padding(top = (14 + if (!isRegisterButtonClicked) 26 else 0).dp)
                 .padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
             label = { Text(stringResource(R.string.login)) },
@@ -76,7 +82,11 @@ fun LoginScreen(navController: NavController) {
         var password by remember { mutableStateOf("") }
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                if (it.length <= 100) {
+                    password = it
+                }
+            },
             modifier = Modifier.padding(top = 14.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
             label = { Text(stringResource(R.string.password)) },
             shape = CircleShape,
