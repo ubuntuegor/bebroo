@@ -37,6 +37,8 @@ import to.bnt.draw.app.theme.SuperLightGray
 import to.bnt.draw.app.theme.WhiteSemiTransparent
 import to.bnt.draw.shared.apiClient.exceptions.ApiException
 
+//TODO Ограничить кол-во символов в логине имени и тд
+
 @Composable
 fun LoginScreen(navController: NavController) {
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
@@ -87,7 +89,7 @@ fun LoginScreen(navController: NavController) {
                 onClick = {
                     MainScope().launch {
                         try {
-                            isLoginButtonClicked = true
+                            isLoginButtonClicked = !isLoginButtonClicked
                             val newToken = BebrooController.client.login(login, password)
                             BebrooController.client.token = newToken
                             userPreferencesStorage.saveToDataStore(SettingsStore(newToken))
@@ -95,7 +97,7 @@ fun LoginScreen(navController: NavController) {
                                 popUpTo("login") { inclusive = true }
                             }
                         } catch (e: ApiException) {
-                            isLoginButtonClicked = false
+                            isLoginButtonClicked = !isLoginButtonClicked
                             authError = e.message
                         }
                     }
@@ -111,7 +113,7 @@ fun LoginScreen(navController: NavController) {
                 }
             }
             TextButton(
-                onClick = { isRegisterButtonClicked = true },
+                onClick = { isRegisterButtonClicked = !isRegisterButtonClicked },
                 modifier = Modifier.padding(top = 14.dp).align(Alignment.CenterHorizontally),
             ) {
                 Text(text = stringResource(R.string.register), fontSize = 18.sp)
@@ -122,7 +124,7 @@ fun LoginScreen(navController: NavController) {
                 onClick = {
                     MainScope().launch {
                         try {
-                            isSignUpButtonClicked = true
+                            isSignUpButtonClicked = !isSignUpButtonClicked
                             val newToken = BebrooController.client.signup(login, password, username)
                             BebrooController.client.token = newToken
                             userPreferencesStorage.saveToDataStore(SettingsStore(newToken))
@@ -130,7 +132,7 @@ fun LoginScreen(navController: NavController) {
                                 popUpTo("login") { inclusive = true }
                             }
                         } catch (e: ApiException) {
-                            isSignUpButtonClicked = false
+                            isSignUpButtonClicked = !isSignUpButtonClicked
                             authError = e.message
                         }
                     }
@@ -146,7 +148,7 @@ fun LoginScreen(navController: NavController) {
                 }
             }
             TextButton(
-                onClick = { isRegisterButtonClicked = false },
+                onClick = { isRegisterButtonClicked = !isRegisterButtonClicked },
                 modifier = Modifier.padding(top = 14.dp).align(Alignment.CenterHorizontally),
             ) {
                 Text(text = stringResource(R.string.enter), fontSize = 18.sp)
