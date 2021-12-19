@@ -8,8 +8,11 @@ import io.ktor.server.testing.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import to.bnt.draw.server.models.Boards
 import to.bnt.draw.server.models.Users
+import to.bnt.draw.server.models.UsersToBoards
 import to.bnt.draw.shared.structures.Board
 import to.bnt.draw.shared.structures.User
 import kotlin.test.Test
@@ -29,6 +32,12 @@ class ApiTest {
 
     private fun deleteUser() {
         transaction {
+            val user = Users.select { Users.username eq username }.firstOrNull() ?: return@transaction
+            val boards = UsersToBoards.select { UsersToBoards.user eq user[Users.id].value }.map { it[UsersToBoards.board].value }
+            UsersToBoards.deleteWhere { UsersToBoards.user eq user[Users.id].value }
+            boards.forEach {
+                Boards.deleteWhere { Boards.id eq it }
+            }
             Users.deleteWhere { Users.username eq username }
         }
     }
