@@ -78,7 +78,7 @@ fun Route.openBoard() {
                 }
 
                 // Update user who opened the board
-                userId.let {
+                userId?.let {
                     val userToBoardCondition =
                         Op.build { (UsersToBoards.board eq boardUuid) and (UsersToBoards.user eq userId) }
                     val userToBoard = UsersToBoards.select(userToBoardCondition).firstOrNull()
