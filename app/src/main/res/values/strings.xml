@@ -18,4 +18,5 @@
     <string name="new_name">Новое имя</string>
     <string name="name">Имя</string>
     <string name="change">Сменить</string>
+    <string name="your_board">Ваша доска</string>
 </resources>

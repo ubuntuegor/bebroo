@@ -1,6 +1,7 @@
 package to.bnt.draw.app.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import coil.compose.rememberImagePainter
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import to.bnt.draw.app.R
@@ -34,41 +35,32 @@ import to.bnt.draw.app.controller.UserPreferencesManager
 import to.bnt.draw.app.theme.Coral
 import to.bnt.draw.app.theme.SuperLightGray
 import to.bnt.draw.shared.apiClient.exceptions.ApiException
-
-//TODO Move to Models
-data class PreviewCardData(
-    val boardName: String,
-    val boardOwner: String,
-    val boardOwnerImage: Painter?,
-    val lastBoardUpdate: String,
-)
+import to.bnt.draw.shared.structures.Board
+import to.bnt.draw.shared.structures.User
+import to.bnt.draw.shared.util.formatTimestamp
 
 @Composable
 fun MenuScreen(navController: NavController) {
-    Scaffold(topBar = { MenuTopBar(navController) }) {
-        val testList = mutableListOf(
-            PreviewCardData(
-                "Зачет по программированию", "Егор Спирин", painterResource(R.drawable.sample_avatar), "6:24"
-            ),
-            PreviewCardData(
-                "Заметки по матанализу", "Ваша доска", painterResource(R.drawable.sample_avatar), "вчера в 21:30"
-            ),
-            PreviewCardData(
-                "Наброски дизайна", "Саморожи", painterResource(R.drawable.sample_avatar), "27 октября в 23:40"
-            ),
-        )
-
+    var meInfo by remember { mutableStateOf<User?>(null) }
+    MainScope().launch { meInfo = BebrooController.client.getMe() }
+    Scaffold(topBar = { MenuTopBar(navController, meInfo) }) {
+        var listOfBoard by remember { mutableStateOf<List<Board>>(listOf()) }
+        MainScope().launch { listOfBoard = BebrooController.client.listBoards() }
+        if (listOfBoard.isEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.Center
+            ) { CircularProgressIndicator() }
+        }
         val scrollState = rememberLazyListState()
         LazyColumn(modifier = Modifier.fillMaxSize(), state = scrollState) {
-            items(testList) { boardPreview ->
+            items(listOfBoard) { board ->
                 BoardPreviewCard(
                     navController,
-                    //TODO setBoardId
-                    "5005",
-                    boardPreview.boardName,
-                    boardPreview.boardOwner,
-                    boardPreview.boardOwnerImage,
-                    boardPreview.lastBoardUpdate
+                    meInfo,
+                    board.uuid,
+                    board.name,
+                    board.creator,
+                    board.timestamp,
                 )
             }
         }
@@ -78,11 +70,11 @@ fun MenuScreen(navController: NavController) {
 @Composable
 fun BoardPreviewCard(
     navController: NavController,
+    meInfo: User?,
     boardID: String,
     boardName: String,
-    boardOwner: String,
-    boardOwnerImage: Painter?,
-    lastBoardUpdate: String,
+    boardCreator: User,
+    timeStamp: Long?,
 ) {
     Column(
         modifier = Modifier.height(67.dp).fillMaxWidth().clickable {
@@ -98,24 +90,30 @@ fun BoardPreviewCard(
                 softWrap = true,
                 maxLines = 1
             )
-            Text(
-                text = lastBoardUpdate,
-                modifier = Modifier.padding(top = 3.dp, end = 17.dp),
-                fontSize = 12.sp,
-            )
+            timeStamp?.let {
+                Text(
+                    text = formatTimestamp(it),
+                    modifier = Modifier.padding(top = 3.dp, end = 17.dp),
+                    fontSize = 12.sp,
+                )
+            }
         }
         Spacer(modifier = Modifier.height(4.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
-            boardOwnerImage?.let {
+            boardCreator.avatarUrl?.let {
                 Image(
-                    it,
-                    "Boarder owner avatar",
+                    painter = rememberImagePainter(it),
+                    contentDescription = "Board owner avatar",
                     modifier = Modifier.padding(start = 17.dp).size(width = 20.dp, height = 20.dp).clip(CircleShape)
                 )
             }
             Text(
-                boardOwner,
-                modifier = Modifier.padding(start = (if (boardOwnerImage == null) 16.dp else 6.dp), end = 19.dp),
+                if (meInfo?.displayName == boardCreator.displayName) {
+                    stringResource(R.string.your_board)
+                } else {
+                    boardCreator.displayName
+                },
+                modifier = Modifier.padding(start = (if (boardCreator.avatarUrl == null) 16.dp else 6.dp), end = 19.dp),
                 color = MaterialTheme.colors.onBackground.copy(alpha = 0.6f),
                 fontSize = 14.sp,
                 overflow = TextOverflow.Ellipsis,
@@ -128,7 +126,7 @@ fun BoardPreviewCard(
 }
 
 @Composable
-fun MenuTopBar(navController: NavController) {
+fun MenuTopBar(navController: NavController, meInfo: User?) {
     var isCreateButtonClicked by remember { mutableStateOf(false) }
     var createError by remember { mutableStateOf<String?>(null) }
     var newBoardName by remember { mutableStateOf("") }
@@ -297,11 +295,19 @@ fun MenuTopBar(navController: NavController) {
         ) { Icon(Icons.Default.Add, contentDescription = "plus sign") }
     }, actions = {
         IconButton(onClick = { isSettingsExpanded = !isSettingsExpanded }) {
-            Image(
-                painterResource(R.drawable.sample_avatar),
-                contentDescription = "sample avatar",
+            if (meInfo?.avatarUrl != null) Image(
+                painter = rememberImagePainter(meInfo.avatarUrl),
+                contentDescription = "user avatar",
                 modifier = Modifier.size(width = 32.dp, height = 32.dp).clip(CircleShape)
-            )
+            ) else Box(
+                modifier = Modifier.size(32.dp).clip(CircleShape).background(color = Color.LightGray)
+            ) {
+                meInfo?.let {
+                    Text(
+                        text = it.displayName.first().toString(), modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
         }
     }, backgroundColor = MaterialTheme.colors.background, elevation = 0.dp
     )
