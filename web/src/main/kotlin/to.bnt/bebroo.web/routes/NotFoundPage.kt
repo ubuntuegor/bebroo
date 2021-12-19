@@ -15,7 +15,7 @@ import to.bnt.bebroo.web.components.pageHeader
 import to.bnt.bebroo.web.components.roundedLink
 
 val notFoundPage = fc<Props> {
-    pageHeader()
+    child(pageHeader)
 
     useEffectOnce {
         document.title = Config.APP_NAME

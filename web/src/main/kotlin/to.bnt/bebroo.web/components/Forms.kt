@@ -18,6 +18,7 @@ import to.bnt.bebroo.web.Config
 import to.bnt.draw.shared.apiClient.ApiClient
 import to.bnt.draw.shared.apiClient.exceptions.ApiException
 import to.bnt.draw.shared.apiClient.googleOAuthPopup
+import to.bnt.draw.shared.structures.User
 
 val authenticationForm = fc<Props> {
     val client = ApiClient(Config.API_PATH)
@@ -202,8 +203,8 @@ val authenticationForm = fc<Props> {
 }
 
 external interface FormProps : Props {
-    var client: ApiClient
-    var onClose: (Event) -> Unit
+    var client: ApiClient?
+    var onClose: ((Event) -> Unit)?
 }
 
 val createBoardForm = fc<FormProps> { props ->
@@ -215,7 +216,7 @@ val createBoardForm = fc<FormProps> { props ->
         isLoading = true
         MainScope().launch {
             try {
-                val uuid = props.client.createBoard(name)
+                val uuid = props.client!!.createBoard(name)
                 history.push("/board/$uuid")
             } catch (e: ApiException) {
                 window.alert(e.message ?: "Ошибка сервера")
@@ -253,21 +254,10 @@ val createBoardForm = fc<FormProps> { props ->
         styledDiv {
             css {
                 display = Display.flex
-                flexDirection = FlexDirection.column
                 alignItems = Align.center
-                gap = 20.px
+                justifyContent = JustifyContent.end
+                gap = 40.px
                 marginTop = 15.px
-                marginBottom = 15.px
-            }
-
-            roundedButton {
-                attrs {
-                    isSubmit = true
-                    accent = true
-                    loading = isLoading
-                }
-
-                +"Создать"
             }
 
             textButton {
@@ -277,11 +267,27 @@ val createBoardForm = fc<FormProps> { props ->
 
                 +"Отмена"
             }
+
+            roundedButton {
+                attrs {
+                    isSubmit = true
+                    accent = true
+                    compact = true
+                    loading = isLoading
+                }
+
+                +"Создать"
+            }
         }
     }
 }
 
-val modifyUserForm = fc<FormProps> { props ->
+external interface ModifyUserFormProps : FormProps {
+    var user: User?
+    var onUserChanged: ((User) -> Unit)?
+}
+
+val modifyUserForm = fc<ModifyUserFormProps> { props ->
     var displayName by useState("")
     var isLoading by useState(false)
 
@@ -289,8 +295,9 @@ val modifyUserForm = fc<FormProps> { props ->
         isLoading = true
         MainScope().launch {
             try {
-                props.client.modifyMe(displayName)
-                window.location.reload()
+                props.client!!.modifyMe(displayName)
+                props.user?.let { user -> props.onUserChanged?.let { it(user.copy(displayName = displayName)) } }
+                props.onClose?.let { it(event) }
             } catch (e: ApiException) {
                 window.alert(e.message ?: "Ошибка сервера")
             } finally {
@@ -327,21 +334,10 @@ val modifyUserForm = fc<FormProps> { props ->
         styledDiv {
             css {
                 display = Display.flex
-                flexDirection = FlexDirection.column
                 alignItems = Align.center
-                gap = 20.px
+                justifyContent = JustifyContent.end
+                gap = 40.px
                 marginTop = 15.px
-                marginBottom = 15.px
-            }
-
-            roundedButton {
-                attrs {
-                    isSubmit = true
-                    accent = true
-                    loading = isLoading
-                }
-
-                +"Изменить"
             }
 
             textButton {
@@ -350,6 +346,17 @@ val modifyUserForm = fc<FormProps> { props ->
                 }
 
                 +"Отмена"
+            }
+
+            roundedButton {
+                attrs {
+                    isSubmit = true
+                    accent = true
+                    compact = true
+                    loading = isLoading
+                }
+
+                +"Изменить"
             }
         }
     }
