@@ -1,6 +1,7 @@
 package to.bnt.draw.app.ui
 
 import android.content.pm.ActivityInfo
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -31,6 +32,7 @@ import to.bnt.draw.app.R
 import to.bnt.draw.app.controller.BebrooController
 import to.bnt.draw.app.controller.UserPreferencesManager
 import to.bnt.draw.app.data.SettingsStore
+import to.bnt.draw.app.googleAuth.AuthResultContract
 import to.bnt.draw.app.theme.BebrooSansFontFamily
 import to.bnt.draw.app.theme.Coral
 import to.bnt.draw.app.theme.SuperLightGray
@@ -163,48 +165,92 @@ fun LoginScreen(navController: NavController) {
             )
         }
         Divider(color = SuperLightGray, modifier = Modifier.padding(top = 27.dp).padding(horizontal = 22.dp))
+
+        var isGoogleAuthButtonClicked by remember { mutableStateOf(false) }
+        var googleAuthError by remember { mutableStateOf<String?>(null) }
+        val signInRequestCode = 1
+        val authResultLauncher = rememberLauncherForActivityResult(contract = AuthResultContract()) { task ->
+            val account = task?.getResult(ApiException::class.java)
+            if (account != null && account.idToken != null) {
+                MainScope().launch {
+                    try {
+                        BebrooController.client.token = BebrooController.client.googleOAuthIdToken(account.idToken!!)
+                        userPreferencesStorage.saveToDataStore(SettingsStore(BebrooController.client.token))
+                        navController.navigate("menu") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    } catch (e: ApiException) {
+                        isGoogleAuthButtonClicked = !isGoogleAuthButtonClicked
+                        googleAuthError = e.message
+                    }
+                }
+            } else {
+                isGoogleAuthButtonClicked = !isGoogleAuthButtonClicked
+                googleAuthError = "Google sign in failed"
+            }
+        }
         Button(
-            onClick = { print("Bebra") },
+            onClick = {
+                isGoogleAuthButtonClicked = !isGoogleAuthButtonClicked
+                authResultLauncher.launch(signInRequestCode)
+            },
             modifier = Modifier.padding(top = 26.dp).padding(horizontal = 14.dp).fillMaxWidth().height(62.dp),
             elevation = elevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
             shape = CircleShape,
             border = BorderStroke(2.dp, Color.LightGray),
             colors = ButtonDefaults.buttonColors(MaterialTheme.colors.background),
         ) {
-            Image(
-                painter = painterResource(R.drawable.ic_google_logo),
-                contentDescription = "Google Button",
-            )
-            Spacer(modifier = Modifier.width(24.dp))
-            Text(text = stringResource(R.string.enter_with_google), fontSize = 20.sp)
-        }
-        Box(modifier = Modifier.fillMaxSize()) {
-            Icon(
-                painter = painterResource(R.drawable.cutted_icon),
-                tint = Color.Unspecified,
-                contentDescription = "cutted icon",
-                modifier = Modifier.align(Alignment.BottomStart).padding(top = 70.dp, start = 17.dp)
-            )
-            Box(
-                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 20.dp, start = 14.dp)
-                    .background(WhiteSemiTransparent)
-            ) {
-                Text(
-                    text = buildAnnotatedString {
-                        append(stringResource(R.string.interactive_desk_for))
-                        append("\n")
-                        append(stringResource(R.string.drawing))
-                        append(" ")
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Coral)) {
-                            append(stringResource(R.string.together))
-                        }
-                    },
-                    modifier = Modifier.align(Alignment.Center),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = BebrooSansFontFamily
+            if (!isGoogleAuthButtonClicked) {
+                Image(
+                    painter = painterResource(R.drawable.ic_google_logo),
+                    contentDescription = "Google Button",
                 )
+                Spacer(modifier = Modifier.width(24.dp))
+                Text(text = stringResource(R.string.enter_with_google), fontSize = 20.sp)
+            } else {
+                CircularProgressIndicator()
             }
+        }
+        googleAuthError?.let {
+            Text(
+                text = it,
+                modifier = Modifier.padding(top = 4.dp).align(Alignment.CenterHorizontally),
+                color = Coral,
+                fontSize = 16.sp
+            )
+        }
+        CosmeticGreetingMessage()
+    }
+}
+
+@Composable
+fun CosmeticGreetingMessage() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Icon(
+            painter = painterResource(R.drawable.cutted_icon),
+            tint = Color.Unspecified,
+            contentDescription = "cutted icon",
+            modifier = Modifier.align(Alignment.BottomStart).padding(top = 70.dp, start = 17.dp)
+        )
+        Box(
+            modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 20.dp, start = 14.dp)
+                .background(WhiteSemiTransparent)
+        ) {
+            Text(
+                text = buildAnnotatedString {
+                    append(stringResource(R.string.interactive_desk_for))
+                    append("\n")
+                    append(stringResource(R.string.drawing))
+                    append(" ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Coral)) {
+                        append(stringResource(R.string.together))
+                    }
+                },
+                modifier = Modifier.align(Alignment.Center),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = BebrooSansFontFamily
+            )
         }
     }
 }
