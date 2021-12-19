@@ -1,73 +1,352 @@
 package to.bnt.bebroo.web.routes
 
+import csstype.important
+import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.css.Color
-import kotlinx.css.px
-import org.w3c.dom.url.URLSearchParams
+import kotlinx.css.*
+import kotlinx.css.properties.s
+import kotlinx.css.properties.transform
+import kotlinx.css.properties.transition
+import kotlinx.css.properties.translateY
+import org.w3c.dom.events.Event
 import react.*
-import react.dom.html.ReactHTML.br
-import react.dom.img
+import react.dom.br
+import react.dom.h1
+import react.router.dom.Link
 import react.router.dom.useHistory
-import react.router.dom.useLocation
+import styled.*
 import to.bnt.bebroo.web.Config
-import to.bnt.bebroo.web.components.roundedButton
-import to.bnt.bebroo.web.components.spinner
+import to.bnt.bebroo.web.Styles
+import to.bnt.bebroo.web.components.*
 import to.bnt.draw.shared.apiClient.ApiClient
 import to.bnt.draw.shared.apiClient.exceptions.ApiException
 import to.bnt.draw.shared.apiClient.exceptions.InvalidTokenException
+import to.bnt.draw.shared.structures.Board
 import to.bnt.draw.shared.structures.User
+import to.bnt.draw.shared.util.formatTimestamp
 
 val homePage = fc<Props> {
-    val client = ApiClient(Config.API_PATH)
+    val client by useState(ApiClient(Config.API_PATH))
     val history = useHistory()
-    val location = useLocation()
-    var hasLoaded by useState(false)
     var user: User? by useState(null)
+    var boards: List<Board>? by useState(null)
+    var showingCreateBoardModal by useState(false)
+    var showingModifyUserModal by useState(false)
 
     val redirectToAuth = {
-        window.localStorage.removeItem("token")
-        val params = URLSearchParams()
-        params.append("returnUrl", location.pathname)
-        history.push("/auth?$params")
+        history.push("/auth")
+    }
+
+    val logout = {
+        window.localStorage.removeItem(Config.LOCAL_STORAGE_TOKEN_KEY)
+        redirectToAuth()
     }
 
     useEffectOnce {
-        val token = window.localStorage.getItem("token")
+        document.title = Config.APP_NAME
+
+        val token = window.localStorage.getItem(Config.LOCAL_STORAGE_TOKEN_KEY)
         token?.let {
             client.token = token
             MainScope().launch {
-                user = try {
-                    client.getMe()
+                try {
+                    user = client.getMe()
+                    boards = client.listBoards()
                 } catch (e: InvalidTokenException) {
+                    window.localStorage.removeItem(Config.LOCAL_STORAGE_TOKEN_KEY)
                     redirectToAuth()
-                    null
                 } catch (e: ApiException) {
                     window.alert(e.message ?: "Ошибка сервера")
-                    null
                 }
-                hasLoaded = true
             }
         } ?: redirectToAuth()
+
+        cleanup {
+            client.close()
+        }
     }
 
-    if (hasLoaded) {
-        +"id: ${user?.id}"
-        br {}
-        +"displayName: ${user?.displayName}"
-        br {}
-        img("Profile picture", user?.avatarUrl) {}
-        br {}
-        roundedButton {
-            attrs.compact = true
-            attrs.onClick = {
-                redirectToAuth()
+    pageHeader {
+        styledDiv {
+            css {
+                position = Position.absolute
+                top = 50.pct
+                left = 10.px
+                maxWidth = 35.pct
+                transform { translateY((-50).pct) }
+            }
+            createButton { showingCreateBoardModal = true }
+        }
+        styledDiv {
+            css {
+                position = Position.absolute
+                top = 50.pct
+                right = 10.px
+                maxWidth = 35.pct
+                transform { translateY((-50).pct) }
+            }
+            user?.let {
+                userManage {
+                    attrs.user = it
+                    attrs.onModifyUserClicked = { showingModifyUserModal = true }
+                    attrs.onLogoutClicked = { logout() }
+                }
+            }
+        }
+    }
+
+    styledMain {
+        css {
+            +Styles.container
+            marginTop = 50.px
+            marginBottom = 100.px
+            display = Display.flex
+            flexDirection = FlexDirection.column
+            alignItems = Align.center
+            gap = 20.px
+        }
+
+        boards?.let {
+            if (it.isEmpty()) {
+                h1 {
+                    +"Досок пока нет"
+                }
+                styledP {
+                    css {
+                        color = Color(Styles.neutralTextColor)
+                    }
+                    +"Создайте доску, чтобы начать рисовать."
+                }
+            } else {
+                for (board in it) {
+                    child(boardListElement) {
+                        attrs.currentUser = user
+                        attrs.board = board
+                    }
+                }
+            }
+        } ?: spinner(Color.black, 50.px)
+
+        copyright()
+    }
+
+    // modal
+    if (showingCreateBoardModal) {
+        child(modal) {
+            createBoardForm {
+                attrs.client = client
+                attrs.onClose = { showingCreateBoardModal = false }
+            }
+        }
+    }
+    if (showingModifyUserModal) {
+        child(modal) {
+            modifyUserForm {
+                attrs.client = client
+                attrs.user = user!!
+                attrs.onClose = { showingModifyUserModal = false }
+                attrs.onUserChanged = { newUser -> user = newUser }
+            }
+        }
+    }
+}
+
+fun RBuilder.createButton(onClick: (Event) -> Unit) {
+    textButton {
+        attrs.onClick = onClick
+
+        styledDiv {
+            css {
+                display = Display.flex
+                alignItems = Align.center
+                fontSize = 13.px
+                fontWeight = FontWeight.w500
             }
 
-            +"Выйти из аккаунта"
+            styledImg("Plus icon", "/assets/images/plus_icon.svg") {
+                css {
+                    marginRight = 16.px
+                }
+                attrs.width = "28px"
+                attrs.height = "28px"
+            }
+
+            +"Создать доску"
         }
-    } else {
-        spinner(Color.black, 50.px)
+    }
+}
+
+external interface UserManageProps : Props {
+    var user: User?
+    var onModifyUserClicked: ((Event) -> Unit)?
+    var onLogoutClicked: ((Event) -> Unit)?
+}
+
+val userManage = fc<UserManageProps> { props ->
+    styledDiv {
+        css {
+            display = Display.flex
+            alignItems = Align.center
+        }
+
+        styledDiv {
+            css {
+                textAlign = TextAlign.right
+                marginRight = 12.px
+                overflow = Overflow.hidden
+            }
+
+            styledDiv {
+                css {
+                    marginBottom = 2.px
+                    fontSize = 14.px
+                    fontWeight = FontWeight.w500
+                    textOverflow = TextOverflow.ellipsis
+                    overflow = Overflow.hidden
+                }
+
+                +(props.user?.displayName ?: "Неизвестный пользователь")
+            }
+
+            styledDiv {
+                css {
+                    fontSize = 11.px
+                    color = Color(Styles.neutralTextColor)
+                }
+
+                textButtonSmall {
+                    attrs.onClick = props.onModifyUserClicked
+                    +"Сменить имя"
+                }
+                +" | "
+                textButtonSmall {
+                    attrs.onClick = props.onLogoutClicked
+                    +"Выйти"
+                }
+            }
+        }
+        profilePicture {
+            attrs.user = props.user
+        }
+    }
+}
+
+external interface BoardListElementProps : Props {
+    var currentUser: User?
+    var board: Board?
+}
+
+val boardListElement = fc<BoardListElementProps> { props ->
+    val isUsersBoard = props.currentUser?.let { user ->
+        props.board?.let { user.id == it.creator.id }
+    } ?: false
+
+    Link {
+        attrs.className = "${Styles.name}-${Styles::fullWidth.name}"
+        attrs.to = "/board/${props.board?.uuid}"
+
+        styledDiv {
+            css {
+                +Styles.card
+                boxSizing = BoxSizing.borderBox
+                width = 100.pct
+                display = Display.flex
+                alignItems = Align.center
+                justifyContent = JustifyContent.spaceBetween
+                padding(20.px, important(40.px))
+                borderRadius = important(50.px)
+                transition("background-color", 0.2.s)
+
+                active {
+                    backgroundColor = Color("#ebebeb")
+                }
+            }
+
+            styledDiv {
+                css {
+                    overflow = Overflow.hidden
+                }
+
+                styledH1 {
+                    css {
+                        marginBottom = 5.px
+                        fontFamily = Styles.brandFontFamily
+                        fontWeight = FontWeight.normal
+                        fontSize = 26.px
+                        overflow = Overflow.hidden
+                        textOverflow = TextOverflow.ellipsis
+                    }
+
+                    +(props.board?.name ?: "Неизвестная доска")
+                }
+                styledDiv {
+                    css {
+                        display = Display.flex
+                        alignItems = Align.center
+                    }
+
+                    if (!isUsersBoard)
+                        styledDiv {
+                            css {
+                                marginRight = 8.px
+                                flex(.0, .0, FlexBasis.auto)
+                                width = 21.px
+                                height = 21.px
+                                borderRadius = 50.pct
+                                backgroundColor = Color("#969696")
+                                backgroundSize = "cover"
+                                backgroundPosition = "center"
+                                props.board?.creator?.avatarUrl?.let { backgroundImage = Image("url(\"$it\")") }
+                            }
+                        }
+
+                    styledSpan {
+                        css {
+                            fontSize = 14.px
+                            fontWeight = FontWeight.w500
+                            color = Color(Styles.neutralTextColor)
+                            overflow = Overflow.hidden
+                            textOverflow = TextOverflow.ellipsis
+                        }
+                        if (isUsersBoard)
+                            +"Ваша доска"
+                        else
+                            +(props.board?.creator?.displayName ?: "Неизвестный пользователь")
+                    }
+                }
+            }
+
+            props.board?.timestamp?.let {
+                styledSpan {
+                    css {
+                        fontSize = 14.px
+                        color = Color(Styles.neutralTextColor)
+                    }
+
+                    +formatTimestamp(it)
+                }
+            }
+        }
+    }
+}
+
+fun RBuilder.copyright() {
+    styledP {
+        css {
+            marginTop = 30.px
+            textAlign = TextAlign.center
+            fontSize = 13.px
+            color = Color(Styles.neutralTextColor)
+        }
+        +"Bebroo Team | SPbU"
+        br {}
+        styledSpan {
+            css {
+                fontWeight = FontWeight.bold
+            }
+            +"2021"
+        }
     }
 }

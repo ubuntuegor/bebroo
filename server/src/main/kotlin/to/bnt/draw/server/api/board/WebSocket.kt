@@ -25,13 +25,13 @@ suspend fun DefaultWebSocketServerSession.sendAction(action: Action) {
     send(Frame.Text(action.toJson()))
 }
 
-suspend fun DefaultWebSocketServerSession.checkBoardAccess(boardUuid: UUID, userId: Int?): Boolean {
+suspend fun DefaultWebSocketServerSession.checkBoardAccessAndClose(boardUuid: UUID, userId: Int?): Boolean {
     val hasAccess = userId?.let {
         transaction {
             val board =
                 Boards.innerJoin(Users).select { Boards.id eq boardUuid }.firstOrNull() ?: return@transaction false
 
-            !(!board[Boards.isPublic] && board[Users.id].value != userId)
+            board[Boards.isPublic] || board[Users.id].value == userId
         }
     } ?: false
     if (!hasAccess) close()
@@ -50,15 +50,14 @@ fun Route.boardWebSocket() {
             throw ApiException("Такой доски не существует")
         }
 
-        // check privileges
-        transaction {
-            val board = Boards.innerJoin(Users).select { Boards.id eq boardUuid }.firstOrNull()
-                ?: throw ApiException("Такой доски не существует")
+        if (!checkBoardAccessAndClose(boardUuid, userId)) throw ForbiddenException()
 
-            if (!board[Boards.isPublic] && board[Users.id].value != userId) {
-                throw ForbiddenException()
-            }
+        val connection = Connection(userId, this)
+        connectionsForBoard[boardUuid] ?: run {
+            connectionsForBoard[boardUuid] = Collections.synchronizedSet(mutableSetOf())
         }
+        val connections = connectionsForBoard[boardUuid]!!
+        connections.add(connection)
 
         val lastFigureId = call.request.queryParameters["figureId"]?.toIntOrNull()
         lastFigureId?.let {
@@ -72,15 +71,10 @@ fun Route.boardWebSocket() {
                     )
                 }
             }
-            sendAction(AddFigures(figures))
+            figures.forEach {
+                sendAction(AddFigure(figure = it))
+            }
         }
-
-        val connection = Connection(userId, this)
-        connectionsForBoard[boardUuid] ?: run {
-            connectionsForBoard[boardUuid] = Collections.synchronizedSet(mutableSetOf())
-        }
-        val connections = connectionsForBoard[boardUuid]!!
-        connections.add(connection)
 
         try {
             // send connected users
@@ -96,7 +90,7 @@ fun Route.boardWebSocket() {
             }
             sendAction(ConnectedUsers(connectedUsers))
 
-            // notify of user connected
+            // notify others of user connected
             userId?.let {
                 val user = transaction {
                     val userEntry = Users.select { Users.id eq userId }.first()
@@ -107,7 +101,7 @@ fun Route.boardWebSocket() {
                     )
                 }
                 connections.forEach {
-                    if (it.userId == userId) return@forEach
+                    if (it == connection) return@forEach
                     it.session.sendAction(UserConnected(user))
                 }
             }
@@ -118,44 +112,40 @@ fun Route.boardWebSocket() {
                 userId ?: continue
 
                 when (val action = Action.fromJson(frame.readText())) {
-                    is AddFigures -> {
-                        if (!checkBoardAccess(boardUuid, userId)) continue
-                        val addedFigures = mutableListOf<Figure>()
-                        action.figures.forEach { figure ->
-                            val figureId = transaction {
-                                Figures.insertAndGetId {
-                                    it[board] = boardUuid
-                                    it[drawingData] = figure.drawingData
-                                    it[color] = figure.color
-                                    it[strokeWidth] = figure.strokeWidth
-                                }
+                    is AddFigure -> {
+                        if (!checkBoardAccessAndClose(boardUuid, userId)) continue
+                        val figure = action.figure
+                        val localId = action.localId
+                        val figureId = transaction {
+                            Figures.insertAndGetId {
+                                it[board] = boardUuid
+                                it[drawingData] = figure.drawingData
+                                it[color] = figure.color
+                                it[strokeWidth] = figure.strokeWidth
                             }
-                            addedFigures.add(
-                                Figure(
-                                    id = figureId.value,
-                                    drawingData = figure.drawingData,
-                                    color = figure.color,
-                                    strokeWidth = figure.strokeWidth
-                                )
-                            )
-                        }
+                        }.value
+                        figure.id = figureId
                         connections.forEach {
-                            if (it.userId == userId) return@forEach
-                            if (!checkBoardAccess(boardUuid, it.userId)) return@forEach
-                            it.session.sendAction(AddFigures(addedFigures))
+                            if (!checkBoardAccessAndClose(boardUuid, it.userId)) return@forEach
+                            if (it == connection) {
+                                localId?.let { localId -> it.session.sendAction(FigureAck(localId, figureId)) }
+                            } else {
+                                it.session.sendAction(AddFigure(figure = figure))
+                            }
                         }
                     }
                     is RemoveFigure -> {
-                        if (!checkBoardAccess(boardUuid, userId)) continue
+                        if (!checkBoardAccessAndClose(boardUuid, userId)) continue
                         transaction {
                             Figures.deleteWhere { Figures.id eq action.figureId }
                         }
                         connections.forEach {
-                            if (it.userId == userId) return@forEach
-                            if (!checkBoardAccess(boardUuid, it.userId)) return@forEach
+                            if (!checkBoardAccessAndClose(boardUuid, it.userId)) return@forEach
+                            if (it == connection) return@forEach
                             it.session.sendAction(RemoveFigure(action.figureId))
                         }
                     }
+                    else -> {}
                 }
             }
         } finally {

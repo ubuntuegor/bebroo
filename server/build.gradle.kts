@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     application
+    id("com.github.johnrengelman.shadow") version "7.1.0"
 }
 
 group = "to.bnt.draw"
@@ -43,4 +44,21 @@ tasks.withType<KotlinCompile>() {
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
+}
+
+tasks{
+    shadowJar {
+        manifest {
+            attributes(Pair("Main-Class", "io.ktor.server.netty.EngineMain"))
+        }
+        val webProject = project(":web")
+        val webpackTask = project.tasks.getByPath(":web:browserProductionWebpack") as org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
+        dependsOn(webpackTask)
+        from(File(webpackTask.destinationDirectory, webpackTask.outputFileName)) {
+            into("assets")
+        }
+        from(webProject.fileTree("src/main/resources/assets")) {
+            into("assets")
+        }
+    }
 }

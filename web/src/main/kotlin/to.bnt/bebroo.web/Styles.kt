@@ -1,18 +1,21 @@
 package to.bnt.bebroo.web
 
 import kotlinx.css.*
-import kotlinx.css.properties.s
-import kotlinx.css.properties.transition
+import kotlinx.css.properties.*
 import styled.StyleSheet
+import styled.animation
 
 object Styles : StyleSheet("styles", isStatic = true) {
     const val defaultFontFamily = "Inter, Roboto, system-ui, sans-serif"
+    const val brandFontFamily = "\"Bebroo Sans\", $defaultFontFamily"
     const val accentColor = "#FF3E54"
     const val accentColorLight = "#FF7181"
     const val accentColorDark = "#E33552"
     const val accentColorHover = "#DE2B3F"
+    const val neutralTextColor = "#777777"
 
     val container by css {
+        boxSizing = BoxSizing.borderBox
         minWidth = 980.px
         maxWidth = 1200.px
         paddingLeft = 10.px
@@ -20,9 +23,26 @@ object Styles : StyleSheet("styles", isStatic = true) {
         margin = "auto"
     }
 
+    val boardControl by css {
+        boxSizing = BoxSizing.borderBox
+        backgroundColor = Color.white
+        borderRadius = 26.px
+        boxShadow(Color("rgba(0,0,0,0.3)"), 0.px, 1.px, 2.px)
+    }
+
+    val card by css {
+        boxSizing = BoxSizing.borderBox
+        backgroundColor = Color.white
+        padding(20.px)
+        borderRadius = 26.px
+        boxShadow(Color("rgba(0,0,0,0.4)"), 0.px, 1.px, 3.px)
+    }
+
     val button by css {
-        display = Display.block
+        display = Display.flex
         width = 100.pct
+        alignItems = Align.center
+        justifyContent = JustifyContent.center
         outline = Outline.none
         fontFamily = defaultFontFamily
         fontSize = 20.px
@@ -35,6 +55,7 @@ object Styles : StyleSheet("styles", isStatic = true) {
         backgroundColor = Color.white
         color = Color.black
         cursor = Cursor.pointer
+        textDecoration = TextDecoration.none
         transition("background-color", 0.2.s)
 
         hover {
@@ -62,10 +83,10 @@ object Styles : StyleSheet("styles", isStatic = true) {
         backgroundColor = Color.transparent
         color = Color.black
         cursor = Cursor.pointer
-        transition("color", 0.2.s)
+        transition("color", 0.1.s)
 
         hover {
-            color = Color("#3c3c3c")
+            color = Color("#555555")
         }
     }
 
@@ -127,9 +148,102 @@ object Styles : StyleSheet("styles", isStatic = true) {
         }
     }
 
+    val minimalTextInput by css {
+        position = Position.relative
+        width = 100.pct
+
+        input {
+            display = Display.block
+            width = 100.pct
+            padding(4.px, 0.px)
+            fontFamily = defaultFontFamily
+            fontSize = 13.px
+            backgroundColor = Color.transparent
+            color = Color("#3c3c3c")
+            border = "none"
+            borderBottom = "solid 1px #d3d3d3"
+            outline = Outline.none
+            transition("border", 0.1.s)
+
+            focus {
+                borderBottom = "solid 1px $accentColorLight"
+            }
+        }
+
+        label {
+            fontSize = 11.px
+            marginBottom = 2.px
+            color = Color("#969696")
+        }
+    }
+
+    val customCheckBox by css {
+        position = Position.relative
+        width = 34.px
+        height = 20.px
+        cursor = Cursor.pointer
+
+        input {
+            position = Position.absolute
+            width = 0.px
+            height = 0.px
+            opacity = 0
+            border = "none"
+
+            checked {
+                sibling(".checkbox-bar") {
+                    backgroundColor = Color(accentColorLight)
+                }
+                sibling(".checkbox-head") {
+                    left = 14.px
+                    backgroundColor = Color(accentColor)
+                }
+            }
+        }
+
+        children(".checkbox-bar") {
+            position = Position.absolute
+            top = 3.px
+            left = 0.px
+            width = 100.pct
+            height = 14.px
+            backgroundColor = Color("#d3d3d3")
+            borderRadius = 14.px
+            transition("background-color", 0.2.s)
+        }
+
+        children(".checkbox-head") {
+            position = Position.absolute
+            top = 0.px
+            left = 0.px
+            width = 20.px
+            height = 20.px
+            backgroundColor = Color.white
+            borderRadius = 50.pct
+            boxShadow(Color("rgba(0,0,0,0.2)"), 0.px, 1.px, 2.px)
+            transition("all", 0.2.s)
+        }
+    }
+
     val compact by css {
-        display = Display.inlineBlock
+        display = Display.inlineFlex
         width = LinearDimension.initial
+    }
+
+    val fullWidth by css {
+        display = Display.block
+        width = 100.pct
+    }
+
+    val fadeIn by css {
+        animation(0.2.s, Timing.ease) {
+            from {
+                opacity = 0
+            }
+            to {
+                opacity = 1
+            }
+        }
     }
 }
 
@@ -142,14 +256,38 @@ val globalStyles = CssBuilder(allowClasses = false).apply {
         color = Color.black
     }
 
+    h1 {
+        margin(0.px)
+    }
+
+    a {
+        color = Color.inherit
+        textDecoration = TextDecoration.none
+
+        visited {
+            color = Color.inherit
+        }
+    }
+
+    fontFace {
+        fontFamily = "Bebroo Sans"
+        fontWeight = FontWeight.normal
+        fontStyle = FontStyle.normal
+        put(
+            "src",
+            "url(\"/assets/fonts/BebrooSans-Regular.woff2\") format(\"woff2\")," +
+                    "url(\"/assets/fonts/BebrooSans-Regular.otf\") format(\"otf\")"
+        )
+    }
+
     fontFace {
         fontFamily = "Bebroo Sans"
         fontWeight = FontWeight.bold
         fontStyle = FontStyle.normal
         put(
             "src",
-            "url(\"/fonts/BebrooSans-Bold.woff2\") format(\"woff2\")," +
-                    "url(\"/fonts/BebrooSans-Bold.otf\") format(\"otf\")"
+            "url(\"/assets/fonts/BebrooSans-Bold.woff2\") format(\"woff2\")," +
+                    "url(\"/assets/fonts/BebrooSans-Bold.otf\") format(\"otf\")"
         )
     }
 
@@ -159,8 +297,8 @@ val globalStyles = CssBuilder(allowClasses = false).apply {
         fontStyle = FontStyle.normal
         put(
             "src",
-            "url(\"/fonts/BebrooSans-SemiBold.woff2\") format(\"woff2\")," +
-                    "url(\"/fonts/BebrooSans-SemiBold.otf\") format(\"otf\")"
+            "url(\"/assets/fonts/BebrooSans-SemiBold.woff2\") format(\"woff2\")," +
+                    "url(\"/assets/fonts/BebrooSans-SemiBold.otf\") format(\"otf\")"
         )
     }
 }

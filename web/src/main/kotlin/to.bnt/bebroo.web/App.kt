@@ -22,15 +22,19 @@ val app = fc<Props> {
             }
             Route {
                 attrs.path = arrayOf("/home")
-                homePage()
+                child(homePage)
             }
             Route {
                 attrs.path = arrayOf("/auth")
-                authPage()
+                child(authPage)
             }
             Route {
-                attrs.path = arrayOf("/board")
-                boardPage()
+                attrs.path = arrayOf("/board/:uuid")
+                child(boardPage)
+            }
+            Route {
+                attrs.path = arrayOf("*")
+                child(notFoundPage)
             }
         }
     }

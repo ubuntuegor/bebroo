@@ -8,10 +8,7 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import to.bnt.draw.shared.apiClient.exceptions.ApiException
-import to.bnt.draw.shared.apiClient.exceptions.InvalidTokenException
-import to.bnt.draw.shared.apiClient.exceptions.RequestErrorException
-import to.bnt.draw.shared.apiClient.exceptions.UnexpectedServerErrorException
+import to.bnt.draw.shared.apiClient.exceptions.*
 import to.bnt.draw.shared.structures.Board
 import to.bnt.draw.shared.structures.User
 
@@ -25,6 +22,7 @@ class ApiClient(internal val apiUrl: String, var token: String? = null) {
                 when (exception) {
                     is ClientRequestException -> {
                         if (exception.response.status == HttpStatusCode.Unauthorized) throw InvalidTokenException()
+                        else if (exception.response.status == HttpStatusCode.Forbidden) throw ForbiddenException()
                         throw ApiException(exception.response.readText())
                     }
                     is ServerResponseException -> {
@@ -62,6 +60,17 @@ class ApiClient(internal val apiUrl: String, var token: String? = null) {
         val response: Map<String, String> = client.get(apiUrl + endpoint) {
             parameter("username", username)
             parameter("password", password)
+        }
+
+        return response["token"] ?: throw ApiException("Ошибка получения токена")
+    }
+
+    suspend fun googleOAuthIdToken(idToken: String): String {
+        val endpoint = "$authEndpoint/googleIdToken"
+        val response: Map<String, String> = client.submitForm(apiUrl + endpoint, Parameters.build {
+            append("idToken", idToken)
+        }, false) {
+            method = HttpMethod.Post
         }
 
         return response["token"] ?: throw ApiException("Ошибка получения токена")
@@ -128,5 +137,9 @@ class ApiClient(internal val apiUrl: String, var token: String? = null) {
         }
 
         return response["uuid"] ?: throw ApiException("Ошибка создания доски")
+    }
+
+    fun close() {
+        client.close()
     }
 }

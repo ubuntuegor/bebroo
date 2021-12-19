@@ -33,6 +33,7 @@ fun Route.listBoards() {
                     .innerJoin(Boards)
                     .innerJoin(Users, { Boards.creator }, { Users.id })
                     .select { UsersToBoards.user eq userId }
+                    .orderBy(UsersToBoards.lastOpened to SortOrder.DESC_NULLS_FIRST)
                 boards.map {
                     Board(
                         uuid = it[Boards.id].value.toString(),
@@ -71,11 +72,13 @@ fun Route.openBoard() {
                     ?: throw ApiException("Такой доски не существует")
 
                 if (!board[Boards.isPublic] && board[Users.id].value != userId) {
-                    throw ForbiddenException()
+                    userId?.let {
+                        throw ForbiddenException()
+                    } ?: throw InvalidTokenException()
                 }
 
                 // Update user who opened the board
-                userId.let {
+                userId?.let {
                     val userToBoardCondition =
                         Op.build { (UsersToBoards.board eq boardUuid) and (UsersToBoards.user eq userId) }
                     val userToBoard = UsersToBoards.select(userToBoardCondition).firstOrNull()
@@ -185,11 +188,19 @@ fun Route.createBoard() {
                 throw ApiException("Поля не могут быть пустыми")
 
             val boardUuid = transaction {
-                Boards.insertAndGetId {
+                val uuid = Boards.insertAndGetId {
                     it[Boards.name] = name
                     it[creator] = userId
                     it[isPublic] = false
                 }
+
+                UsersToBoards.insert {
+                    it[board] = uuid
+                    it[user] = userId
+                    it[lastOpened] = Instant.now()
+                }
+
+                uuid.value
             }
 
             call.respond(mapOf("uuid" to boardUuid.toString()))
