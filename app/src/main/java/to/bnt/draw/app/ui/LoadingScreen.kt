@@ -38,9 +38,9 @@ fun LoadingScreen(navController: NavController) {
         )
         delay(900L)
         if (settingsStoreState.value.token != null) {
-            navController.navigate("menu")
+            navController.navigate("menu") { popUpTo("loading_screen") { inclusive = true } }
         } else {
-            navController.navigate("login")
+            navController.navigate("login") { popUpTo("loading_screen") { inclusive = true } }
         }
     }
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
