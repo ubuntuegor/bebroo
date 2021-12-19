@@ -135,6 +135,7 @@ fun SharingMenu(isSharingSettingsExpanded: MutableState<Boolean>, boardInfo: Mut
                         fontSize = 25.sp,
                         fontWeight = FontWeight.Medium,
                     )
+                    var changePublicError by remember { mutableStateOf<String?>(null) }
                     boardInfo.value?.let { board ->
                         if (meInfo?.id == board.creator.id) {
                             Row(
@@ -145,9 +146,14 @@ fun SharingMenu(isSharingSettingsExpanded: MutableState<Boolean>, boardInfo: Mut
                                 var isPublic by remember { mutableStateOf(board.isPublic) }
                                 Switch(
                                     checked = isPublic, onCheckedChange = {
-                                        isPublic = !isPublic
-                                        MainScope().launch {
-                                            BebrooController.client.modifyBoard(board.uuid, isPublic = isPublic)
+                                        try {
+                                            isPublic = !isPublic
+                                            MainScope().launch {
+                                                BebrooController.client.modifyBoard(board.uuid, isPublic = isPublic)
+                                            }
+                                        } catch (e: ApiException) {
+                                            isPublic = !isPublic
+                                            changePublicError = e.message
                                         }
                                     }, colors = SwitchDefaults.colors(checkedThumbColor = Coral)
                                 )
@@ -179,7 +185,6 @@ fun SharingMenu(isSharingSettingsExpanded: MutableState<Boolean>, boardInfo: Mut
                             }
                         }
                     }
-                    //  RadioButton(onClick = {})
                     val context = LocalContext.current
                     Button(
                         onClick = {
@@ -190,11 +195,23 @@ fun SharingMenu(isSharingSettingsExpanded: MutableState<Boolean>, boardInfo: Mut
                             sharingIntent.putExtra(Intent.EXTRA_TEXT, sharingURLBuilder.toString())
                             startActivity(context, Intent.createChooser(sharingIntent, "Sharing using"), null)
                         },
-                        modifier = Modifier.padding(top = 20.dp, bottom = 8.dp).padding(horizontal = 12.dp)
+                        modifier = Modifier.padding(top = 25.dp).padding(horizontal = 12.dp)
                             .align(Alignment.CenterHorizontally).height(37.dp).fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(text = stringResource(R.string.share))
+                    }
+                    Row(
+                        modifier = Modifier.height(24.dp).fillMaxWidth().padding(bottom = 2.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        changePublicError?.let {
+                            Text(
+                                text = it,
+                                color = Coral,
+                                fontSize = 16.sp,
+                            )
+                        }
                     }
                 }
             }
