@@ -6,7 +6,6 @@ import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.css.*
-import kotlinx.css.properties.boxShadow
 import kotlinx.css.properties.s
 import kotlinx.css.properties.transition
 import kotlinx.html.InputType
@@ -34,6 +33,7 @@ import to.bnt.draw.shared.drawing.DrawingBoard
 import to.bnt.draw.shared.drawing.JsCanvas
 import to.bnt.draw.shared.structures.Board
 import to.bnt.draw.shared.structures.User
+import kotlin.math.round
 
 enum class ShowingPanel {
     None, HelpPanel, SharePanel
@@ -47,6 +47,7 @@ val boardPage = fc<Props> {
     val history = useHistory()
 
     val client: ApiClient by useState(ApiClient(Config.API_PATH))
+    var hasLoaded by useState(false)
     var user: User? by useState(null)
     var board: Board? by useState(null)
     var usersConnected: List<User>? by useState(null)
@@ -92,6 +93,7 @@ val boardPage = fc<Props> {
                 board = client.getBoard(uuid)
                 val canvas = JsCanvas(canvasId)
                 drawingBoard = DrawingBoard(canvas)
+                hasLoaded = true
             } catch (e: InvalidTokenException) {
                 window.localStorage.removeItem(Config.LOCAL_STORAGE_TOKEN_KEY)
                 redirectToAuth()
@@ -170,14 +172,58 @@ val boardPage = fc<Props> {
     }
 
     // Board controls
+    if (hasLoaded)
+        user?.let {
+            styledDiv {
+                css {
+                    position = Position.fixed
+                    left = 20.px
+                    bottom = 20.px
+                }
+
+                colorSelector {
+                    attrs.drawingBoard = drawingBoard
+                }
+            }
+
+            styledDiv {
+                css {
+                    position = Position.fixed
+                    left = 20.px
+                    bottom = 80.px
+                }
+
+                widthSelector {
+                    attrs.drawingBoard = drawingBoard
+                }
+            }
+        } ?: run {
+            styledDiv {
+                css {
+                    position = Position.fixed
+                    left = 20.px
+                    bottom = 20.px
+                }
+
+                roundedLink {
+                    val queryParams = URLSearchParams()
+                    queryParams.append("returnUrl", location.pathname)
+                    attrs.to = "/auth?$queryParams"
+                    attrs.accent = true
+
+                    +"Войти"
+                }
+            }
+        }
+
     styledDiv {
         css {
             position = Position.fixed
-            left = 20.px
+            right = 20.px
             bottom = 20.px
         }
 
-        colorSelector {
+        zoomControl {
             attrs.drawingBoard = drawingBoard
         }
     }
@@ -528,7 +574,7 @@ external interface DrawingBoardToolProps : Props {
     var drawingBoard: DrawingBoard?
 }
 
-enum class SelectedTool {
+private enum class SelectedTool {
     Color, CustomColor, Eraser
 }
 
@@ -555,15 +601,9 @@ val colorSelector = fc<DrawingBoardToolProps> { props ->
         for (color in colors) {
             styledDiv {
                 css {
-                    width = 30.px
-                    height = 30.px
-                    borderRadius = 50.pct
-                    boxSizing = BoxSizing.borderBox
+                    +Styles.boardColor
                     backgroundColor = Color(color)
-                    boxShadow(Color("#d3d3d3"), 0.px, 0.px, 0.px, 1.px)
                     border = "solid 8px white"
-                    transition("border", 0.2.s)
-                    cursor = Cursor.pointer
                     if (tool == SelectedTool.Color && color == selectedColor) {
                         border = "solid 4px white"
                     }
@@ -574,18 +614,9 @@ val colorSelector = fc<DrawingBoardToolProps> { props ->
 
         styledLabel {
             css {
-                width = 30.px
-                height = 30.px
-                borderRadius = 50.pct
-                boxSizing = BoxSizing.borderBox
+                +Styles.boardColor
                 backgroundColor = Color.white
-                display = Display.flex
-                alignItems = Align.center
-                justifyContent = JustifyContent.center
-                boxShadow(Color("#d3d3d3"), 0.px, 0.px, 0.px, 1.px)
                 border = "solid 8px white"
-                transition("border", 0.2.s)
-                cursor = Cursor.pointer
                 if (tool == SelectedTool.CustomColor) {
                     backgroundColor = Color(customColor)
                     border = "solid 4px white"
@@ -623,16 +654,8 @@ val colorSelector = fc<DrawingBoardToolProps> { props ->
 
         styledDiv {
             css {
-                width = 30.px
-                height = 30.px
-                borderRadius = 50.pct
-                boxSizing = BoxSizing.borderBox
+                +Styles.boardColor
                 backgroundColor = Color.white
-                display = Display.flex
-                alignItems = Align.center
-                justifyContent = JustifyContent.center
-                boxShadow(Color("#d3d3d3"), 0.px, 0.px, 0.px, 1.px)
-                cursor = Cursor.pointer
             }
             attrs.onClickFunction = { tool = SelectedTool.Eraser }
             if (tool == SelectedTool.Eraser) {
@@ -640,6 +663,104 @@ val colorSelector = fc<DrawingBoardToolProps> { props ->
             } else {
                 eraserIcon(16, "#777777")
             }
+        }
+    }
+}
+
+val widthSelector = fc<DrawingBoardToolProps> { props ->
+    val widthRange = 3..40
+    var strokeWidth by useState(10)
+
+    styledDiv {
+        css {
+            +Styles.boardControl
+            width = 200.px
+            padding(15.px)
+        }
+
+        styledDiv {
+            css {
+                display = Display.flex
+                alignItems = Align.end
+                justifyContent = JustifyContent.spaceBetween
+                marginBottom = 6.px
+            }
+
+            styledDiv {
+                css {
+                    width = 8.px
+                    height = 8.px
+                    borderRadius = 50.pct
+                    backgroundColor = Color("#3c3c3c")
+                }
+            }
+            styledDiv {
+                css {
+                    width = 20.px
+                    height = 20.px
+                    borderRadius = 50.pct
+                    backgroundColor = Color("#3c3c3c")
+                }
+            }
+        }
+
+        styledDiv {
+            css {
+                paddingLeft = 4.px
+                paddingRight = 10.px
+            }
+
+            customSlider {
+                attrs.min = widthRange.first
+                attrs.max = widthRange.last
+                attrs.step = widthRange.step
+                attrs.value = strokeWidth
+                attrs.onChange = { strokeWidth = it }
+            }
+        }
+    }
+}
+
+val zoomControl = fc<DrawingBoardToolProps> {
+    var scale by useState(1.0)
+
+    val resetHandler = { _: Event ->
+
+    }
+
+    styledDiv {
+        css {
+            +Styles.boardControl
+            height = 30.px
+            padding(5.px)
+            display = Display.flex
+            alignItems = Align.center
+        }
+
+        styledDiv {
+            css {
+                padding(0.px, 12.px)
+                fontSize = 14.px
+            }
+
+            val zoom = round(scale * 100)
+            +"$zoom%"
+        }
+
+        styledDiv {
+            css {
+                height = 20.px
+                cursor = Cursor.pointer
+                borderRadius = 50.pct
+                backgroundColor = Color.white
+                transition("background-color", 0.2.s)
+                active {
+                    backgroundColor = Color("#ebebeb")
+                }
+            }
+            attrs.onClickFunction = resetHandler
+
+            resetIcon(20, "#000000")
         }
     }
 }

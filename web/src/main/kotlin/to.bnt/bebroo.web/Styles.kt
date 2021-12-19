@@ -30,6 +30,19 @@ object Styles : StyleSheet("styles", isStatic = true) {
         boxShadow(Color("rgba(0,0,0,0.3)"), 0.px, 1.px, 2.px)
     }
 
+    val boardColor by css {
+        width = 30.px
+        height = 30.px
+        borderRadius = 50.pct
+        boxSizing = BoxSizing.borderBox
+        boxShadow(Color("#d3d3d3"), 0.px, 0.px, 0.px, 1.px)
+        transition("border", 0.2.s)
+        display = Display.flex
+        alignItems = Align.center
+        justifyContent = JustifyContent.center
+        cursor = Cursor.pointer
+    }
+
     val card by css {
         boxSizing = BoxSizing.borderBox
         backgroundColor = Color.white
