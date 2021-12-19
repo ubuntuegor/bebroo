@@ -107,6 +107,7 @@ val boardPage = fc<Props> {
 
         cleanup {
             client.close()
+            drawingBoard?.cleanup()
             window.removeEventListener("resize", resizeHandler)
         }
     }
@@ -172,7 +173,7 @@ val boardPage = fc<Props> {
     }
 
     // Board controls
-    if (hasLoaded)
+    if (hasLoaded) {
         user?.let {
             styledDiv {
                 css {
@@ -216,15 +217,16 @@ val boardPage = fc<Props> {
             }
         }
 
-    styledDiv {
-        css {
-            position = Position.fixed
-            right = 20.px
-            bottom = 20.px
-        }
+        styledDiv {
+            css {
+                position = Position.fixed
+                right = 20.px
+                bottom = 20.px
+            }
 
-        zoomControl {
-            attrs.drawingBoard = drawingBoard
+            zoomControl {
+                attrs.drawingBoard = drawingBoard
+            }
         }
     }
 }
@@ -579,14 +581,29 @@ private enum class SelectedTool {
 }
 
 val colorSelector = fc<DrawingBoardToolProps> { props ->
-    val colors = listOf("#faf0be", "#00ff00", "#0000ff")
+    val colors = DrawingBoard.defaultColors
     var tool by useState(SelectedTool.Color)
-    var selectedColor: String? by useState(colors[0])
+    var selectedColor by useState(props.drawingBoard!!.strokeColor)
     var customColor by useState("")
 
     useEffect {
         if (tool != SelectedTool.CustomColor && customColor != "")
             customColor = ""
+    }
+
+    useEffect {
+        if (tool != SelectedTool.Eraser) props.drawingBoard?.isEraser = false
+        when (tool) {
+            SelectedTool.Color -> {
+                props.drawingBoard?.strokeColor = selectedColor
+            }
+            SelectedTool.CustomColor -> {
+                props.drawingBoard?.strokeColor = customColor.ifEmpty { "#000000" }
+            }
+            SelectedTool.Eraser -> {
+                props.drawingBoard?.isEraser = true
+            }
+        }
     }
 
     styledDiv {
@@ -668,8 +685,12 @@ val colorSelector = fc<DrawingBoardToolProps> { props ->
 }
 
 val widthSelector = fc<DrawingBoardToolProps> { props ->
-    val widthRange = 3..40
-    var strokeWidth by useState(10)
+    val widthRange = DrawingBoard.strokeWidthRange
+    var strokeWidth by useState(DrawingBoard.defaultStrokeWidth)
+
+    useEffect {
+        props.drawingBoard?.strokeWidth = strokeWidth
+    }
 
     styledDiv {
         css {
@@ -721,11 +742,21 @@ val widthSelector = fc<DrawingBoardToolProps> { props ->
     }
 }
 
-val zoomControl = fc<DrawingBoardToolProps> {
+val zoomControl = fc<DrawingBoardToolProps> { props ->
     var scale by useState(1.0)
 
-    val resetHandler = { _: Event ->
+    useEffectOnce {
+        props.drawingBoard!!.onScaleChanged = {
+            scale = it
+        }
 
+        cleanup {
+            props.drawingBoard!!.onScaleChanged = {}
+        }
+    }
+
+    val resetHandler: (Event) -> Unit = { _: Event ->
+        props.drawingBoard?.setScale(1.0)
     }
 
     styledDiv {
