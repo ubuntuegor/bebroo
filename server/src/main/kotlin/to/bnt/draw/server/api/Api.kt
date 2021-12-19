@@ -32,7 +32,8 @@ val httpClient = HttpClient(CIO) {
 fun Application.initializeDatabase() {
     Database.connect(
         environment.config.property("database.url").getString(), driver = "org.postgresql.Driver",
-        user = environment.config.property("database.username").getString()
+        user = environment.config.property("database.username").getString(),
+        password = environment.config.property("database.password").getString()
     )
     transaction {
         SchemaUtils.create(Users, Boards, UsersToBoards, Figures)
