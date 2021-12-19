@@ -27,7 +27,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import to.bnt.draw.app.R
 import to.bnt.draw.app.controller.BebrooController
@@ -46,22 +49,31 @@ fun MenuScreen(navController: NavController) {
     Scaffold(topBar = { MenuTopBar(navController, meInfo) }) {
         var listOfBoard by remember { mutableStateOf<List<Board>>(listOf()) }
         MainScope().launch { listOfBoard = BebrooController.client.listBoards() }
-        if (listOfBoard.isEmpty()) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.Center
-            ) { CircularProgressIndicator() }
+
+        var isRefreshing by remember { mutableStateOf(true) }
+        val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
+        LaunchedEffect(isRefreshing) {
+            if (isRefreshing) {
+                delay(1000L)
+                isRefreshing = !isRefreshing
+            }
         }
-        val scrollState = rememberLazyListState()
-        LazyColumn(modifier = Modifier.fillMaxSize(), state = scrollState) {
-            items(listOfBoard) { board ->
-                BoardPreviewCard(
-                    navController,
-                    meInfo,
-                    board.uuid,
-                    board.name,
-                    board.creator,
-                    board.timestamp,
-                )
+        SwipeRefresh(state = swipeRefreshState, onRefresh = {
+            isRefreshing = !isRefreshing
+            MainScope().launch { listOfBoard = BebrooController.client.listBoards() }
+        }) {
+            val scrollState = rememberLazyListState()
+            LazyColumn(modifier = Modifier.fillMaxSize(), state = scrollState) {
+                items(listOfBoard) { board ->
+                    BoardPreviewCard(
+                        navController,
+                        meInfo,
+                        board.uuid,
+                        board.name,
+                        board.creator,
+                        board.timestamp,
+                    )
+                }
             }
         }
     }

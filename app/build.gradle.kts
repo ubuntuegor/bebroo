@@ -15,7 +15,9 @@ dependencies {
     implementation("com.google.android.material:material:1.4.0")
     implementation("androidx.appcompat:appcompat:1.4.0")
     implementation("androidx.activity:activity-compose:1.4.0")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.20.3")
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.20.3")
 
     val composeVersion: String by project
     implementation("androidx.compose.material:material:$composeVersion")
@@ -24,9 +26,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.4.0-beta02")
     implementation("io.coil-kt:coil-compose:1.4.0")
 
-    implementation ("androidx.datastore:datastore-preferences:1.0.0")
-
-    implementation ("com.google.android.gms:play-services-auth:20.0.0")
+    implementation("com.google.android.gms:play-services-auth:20.0.0")
 
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:$composeVersion")
 }
