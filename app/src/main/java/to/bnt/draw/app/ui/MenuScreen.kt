@@ -54,7 +54,7 @@ fun MenuScreen(navController: NavController) {
         val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
         LaunchedEffect(isRefreshing) {
             if (isRefreshing) {
-                delay(1000L)
+                delay(900L)
                 isRefreshing = !isRefreshing
             }
         }
@@ -112,21 +112,24 @@ fun BoardPreviewCard(
         }
         Spacer(modifier = Modifier.height(4.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
-            boardCreator.avatarUrl?.let {
+            if (boardCreator.avatarUrl != null) {
                 Image(
-                    painter = rememberImagePainter(it),
+                    painter = rememberImagePainter(boardCreator.avatarUrl),
                     contentDescription = "Board owner avatar",
-                    modifier = Modifier.padding(start = 17.dp).size(width = 20.dp, height = 20.dp).clip(CircleShape)
+                    modifier = Modifier.padding(start = 17.dp).size(20.dp).clip(CircleShape)
                 )
-            }
+            } else Box(
+                modifier = Modifier.padding(start = 17.dp).size(20.dp).clip(CircleShape)
+                    .background(color = Color.LightGray)
+            )
             Text(
-                if (meInfo?.displayName == boardCreator.displayName) {
+                text = if (meInfo?.id == boardCreator.id) {
                     stringResource(R.string.your_board)
                 } else {
                     boardCreator.displayName
                 },
-                modifier = Modifier.padding(start = (if (boardCreator.avatarUrl == null) 16.dp else 6.dp), end = 19.dp),
-                color = MaterialTheme.colors.onBackground.copy(alpha = 0.6f),
+                modifier = Modifier.padding(start = 6.dp, end = 19.dp),
+                color = MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
                 fontSize = 14.sp,
                 overflow = TextOverflow.Ellipsis,
                 softWrap = true,
@@ -139,13 +142,55 @@ fun BoardPreviewCard(
 
 @Composable
 fun MenuTopBar(navController: NavController, meInfo: User?) {
-    var isCreateButtonClicked by remember { mutableStateOf(false) }
+    val isCreateButtonClicked = remember { mutableStateOf(false) }
+    val isSettingsExpanded = remember { mutableStateOf(false) }
+    MenuSettings(navController, isCreateButtonClicked, isSettingsExpanded)
+    TopAppBar(title = {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            Image(
+                painter = painterResource(R.drawable.logo),
+                contentDescription = "logo",
+                modifier = Modifier.height(24.dp),
+            )
+        }
+    }, navigationIcon = {
+        IconButton(
+            onClick = { isCreateButtonClicked.value = !isCreateButtonClicked.value },
+        ) { Icon(Icons.Default.Add, contentDescription = "plus sign") }
+    }, actions = {
+        IconButton(onClick = { isSettingsExpanded.value = !isSettingsExpanded.value }) {
+            if (meInfo?.avatarUrl != null) Image(
+                painter = rememberImagePainter(meInfo.avatarUrl),
+                contentDescription = "user avatar",
+                modifier = Modifier.size(32.dp).clip(CircleShape)
+            ) else Box(
+                modifier = Modifier.size(32.dp).clip(CircleShape).background(color = Color.LightGray)
+            ) {
+                meInfo?.let {
+                    Text(
+                        text = it.displayName.first().toString(),
+                        modifier = Modifier.align(Alignment.Center),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }, backgroundColor = MaterialTheme.colors.background, elevation = 0.dp
+    )
+}
+
+@Composable
+fun MenuSettings(
+    navController: NavController,
+    isCreateButtonClicked: MutableState<Boolean>,
+    isSettingsExpanded: MutableState<Boolean>
+) {
     var createError by remember { mutableStateOf<String?>(null) }
     var newBoardName by remember { mutableStateOf("") }
-    var isSettingsExpanded by remember { mutableStateOf(false) }
 
-    if (isCreateButtonClicked) {
-        Dialog(onDismissRequest = { isCreateButtonClicked = !isCreateButtonClicked }) {
+    if (isCreateButtonClicked.value) {
+        Dialog(onDismissRequest = { isCreateButtonClicked.value = !isCreateButtonClicked.value }) {
             Card(elevation = 7.dp, shape = RoundedCornerShape(8.dp)) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
@@ -243,7 +288,7 @@ fun MenuTopBar(navController: NavController, meInfo: User?) {
                                     isChangeButtonClicked = !isChangeButtonClicked
                                     BebrooController.client.modifyMe(newName)
                                     isChangeNameButtonCLicked = !isChangeNameButtonCLicked
-                                    isSettingsExpanded = !isSettingsExpanded
+                                    isSettingsExpanded.value = !isSettingsExpanded.value
                                 } catch (e: ApiException) {
                                     isChangeButtonClicked = !isChangeButtonClicked
                                     changeNameError = e.message
@@ -277,11 +322,11 @@ fun MenuTopBar(navController: NavController, meInfo: User?) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxWidth().wrapContentSize(Alignment.TopEnd).padding(top = 55.dp, end = 12.dp)) {
+    Box(modifier = Modifier.fillMaxWidth().wrapContentSize(Alignment.TopEnd).padding(top = 58.dp, end = 12.dp)) {
         val userPreferencesManager = UserPreferencesManager(LocalContext.current)
         DropdownMenu(
-            expanded = isSettingsExpanded,
-            onDismissRequest = { isSettingsExpanded = !isSettingsExpanded },
+            expanded = isSettingsExpanded.value,
+            onDismissRequest = { isSettingsExpanded.value = !isSettingsExpanded.value },
         ) {
             DropdownMenuItem(onClick = { isChangeNameButtonCLicked = !isChangeNameButtonCLicked }) {
                 Text(stringResource(R.string.change_name))
@@ -293,34 +338,4 @@ fun MenuTopBar(navController: NavController, meInfo: User?) {
             }) { Text(stringResource(R.string.exit)) }
         }
     }
-    TopAppBar(title = {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            Image(
-                painter = painterResource(R.drawable.logo),
-                contentDescription = "logo",
-                modifier = Modifier.height(24.dp),
-            )
-        }
-    }, navigationIcon = {
-        IconButton(
-            onClick = { isCreateButtonClicked = !isCreateButtonClicked },
-        ) { Icon(Icons.Default.Add, contentDescription = "plus sign") }
-    }, actions = {
-        IconButton(onClick = { isSettingsExpanded = !isSettingsExpanded }) {
-            if (meInfo?.avatarUrl != null) Image(
-                painter = rememberImagePainter(meInfo.avatarUrl),
-                contentDescription = "user avatar",
-                modifier = Modifier.size(width = 32.dp, height = 32.dp).clip(CircleShape)
-            ) else Box(
-                modifier = Modifier.size(32.dp).clip(CircleShape).background(color = Color.LightGray)
-            ) {
-                meInfo?.let {
-                    Text(
-                        text = it.displayName.first().toString(), modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-            }
-        }
-    }, backgroundColor = MaterialTheme.colors.background, elevation = 0.dp
-    )
 }
