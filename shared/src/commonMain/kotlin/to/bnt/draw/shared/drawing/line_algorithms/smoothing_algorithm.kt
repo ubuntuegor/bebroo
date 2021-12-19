@@ -102,7 +102,7 @@ private fun calculateCatmullRomCurvePoints(pivotPointsLine: Line, distributionSe
         chainPoints.addAll(calculateCatmullRomSplinePoints(currentSpline, distributionSegmentsCount))
     }
 
-    return Line(chainPoints)
+    return pivotPointsLine.copy(linePoints = chainPoints)
 }
 
 private fun findContinuationPoint(fromPoint: Point, toPoint: Point) = toPoint + fromPoint.getVectorTo(toPoint)
@@ -110,7 +110,7 @@ private fun findContinuationPoint(fromPoint: Point, toPoint: Point) = toPoint + 
 // Calculates a smoothed line through the pivot points with given segments distribution count.
 fun smoothLine(pivotPointsLine: Line, distributionSegmentsCount: Long): Line {
     val pivotPoints = pivotPointsLine.points
-    if (pivotPoints.count() < 2) return Line(emptyList())
+    if (pivotPoints.count() < 2) return pivotPointsLine
 
     val firstPoint = pivotPoints.first()
     val secondPoint = pivotPoints[1]
@@ -123,5 +123,5 @@ fun smoothLine(pivotPointsLine: Line, distributionSegmentsCount: Long): Line {
     augmentedPivotPoints.add(0, firstPointContinuation)
     augmentedPivotPoints.add(lastPointContinuation)
 
-    return calculateCatmullRomCurvePoints(Line(augmentedPivotPoints), distributionSegmentsCount)
+    return calculateCatmullRomCurvePoints(pivotPointsLine.copy(linePoints = augmentedPivotPoints), distributionSegmentsCount)
 }

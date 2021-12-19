@@ -9,6 +9,6 @@ interface SharedCanvas {
     val height: Int
     fun bindEvents(board: DrawingBoard)
     fun drawLine(points: List<Point>, paint: Paint)
-    fun drawCircle(center: Point, radius: Double, paint: Paint)
     fun clear()
+    fun cleanup()
 }

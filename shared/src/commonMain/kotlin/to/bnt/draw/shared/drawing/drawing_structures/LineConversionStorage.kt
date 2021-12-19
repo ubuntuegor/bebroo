@@ -293,7 +293,6 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
     }
 
     fun translateCamera(translationVector: Point) {
-        println(cameraPoint)
         cameraPoint += translationVector
     }
 

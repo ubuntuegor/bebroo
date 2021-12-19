@@ -44,7 +44,7 @@ fun douglasPeuckerAlgorithm(line: Line, epsilon: Double): Line {
         }
     }
 
-    return Line(points.filterIndexed { index, _ -> keepPoint[index] })
+    return line.copy(linePoints = points.filterIndexed { index, _ -> keepPoint[index] })
 }
 
 // Calculates a simplified line with fewer points.

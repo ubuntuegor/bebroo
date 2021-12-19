@@ -1,6 +1,6 @@
 package to.bnt.draw.shared.drawing.drawing_structures
 
-data class Line(private val linePoints: List<Point> = emptyList()) {
+data class Line(private val linePoints: List<Point> = emptyList(), var strokeWidth: Double, var strokeColor: String) {
     private var _points = linePoints.toMutableList()
 
     var smallestXCoordinate = _points.minOfOrNull { it.x } ?: Double.POSITIVE_INFINITY
@@ -16,7 +16,7 @@ data class Line(private val linePoints: List<Point> = emptyList()) {
         )
     }
 
-    fun updateExtremeCoorinatesValues(addedPoint: Point) {
+    private fun updateExtremeCoordinatesValues(addedPoint: Point) {
         if (addedPoint.x > biggestXCoordinate) biggestXCoordinate = addedPoint.x
         if (addedPoint.x < smallestXCoordinate) smallestXCoordinate = addedPoint.x
         if (addedPoint.y > biggestYCoordinate) biggestYCoordinate = addedPoint.y
@@ -28,7 +28,7 @@ data class Line(private val linePoints: List<Point> = emptyList()) {
 
     fun addPoint(point: Point) {
         _points.add(point)
-        updateExtremeCoorinatesValues(point)
+        updateExtremeCoordinatesValues(point)
     }
     fun clear() {
         _points = mutableListOf()

@@ -10,16 +10,33 @@ class DrawingBoard(private val canvas: SharedCanvas) {
         canvas.bindEvents(this)
     }
 
+    private var _strokeColor = defaultColors[0]
+    private var _strokeWidth = defaultStrokeWidth
     private var isDrawing = false
-    private val drawingLine = Line()
+    private var isDragging = false
+    private val drawingLine = Line(emptyList(), _strokeWidth.toDouble(), _strokeColor)
     private val conversionStorage = LineConversionStorage(canvas.width, canvas.height)
     private var scaleCoefficient = 1.0
-    private var isDragging = false
     private var lastMousePoint = Point(0.0, 0.0)
-    val paint = Paint(strokeWidth = 1.0, strokeColor = "#fab0be")
+
+    var isEraser = false
+    var strokeColor: String
+        get() = _strokeColor
+        set(value) {
+            _strokeColor = value
+            drawingLine.strokeColor = value
+        }
+    var strokeWidth: Int
+        get() = _strokeWidth
+        set(value) {
+            _strokeWidth = value
+            drawingLine.strokeWidth = value.toDouble()
+        }
+    var onScaleChanged: (Double) -> Unit = {}
 
     fun onMouseDown(point: Point) {
         isDrawing = true
+        if (!isEraser) drawingLine.addPoint(point)
     }
 
     fun onMouseMove(point: Point) {
@@ -28,13 +45,25 @@ class DrawingBoard(private val canvas: SharedCanvas) {
                 conversionStorage.translateCamera((lastMousePoint - point).apply { y = -y })
                 redrawLines()
             }
-            isDrawing -> drawingLine.addPoint(point)
+            isDrawing -> {
+                if (isEraser) {
+                    clearLineAtPoint(point)
+                } else {
+                    drawingLine.addPoint(point)
+                    canvas.drawLine(
+                        drawingLine.points,
+                        Paint(strokeColor = _strokeColor, strokeWidth = _strokeWidth * scaleCoefficient)
+                    )
+                }
+            }
         }
         lastMousePoint = point
     }
 
-    fun onWheelUp() {
-        isDragging = false
+    fun onMouseUp(point: Point) {
+        if (isEraser) return
+        if (isDrawing) drawingLine.addPoint(point)
+        stopDrawing()
     }
 
     fun onWheelDown() {
@@ -42,9 +71,8 @@ class DrawingBoard(private val canvas: SharedCanvas) {
         stopDrawing()
     }
 
-    fun onMouseUp(point: Point) {
-        drawingLine.addPoint(point)
-        stopDrawing()
+    fun onWheelUp() {
+        isDragging = false
     }
 
     fun onMouseWheel(wheelDelta: Double) {
@@ -52,11 +80,24 @@ class DrawingBoard(private val canvas: SharedCanvas) {
         changeScaleCoefficient(calculateScaleCoefficient(wheelDelta))
     }
 
-    fun stopDrawing() {
+    fun setScale(newScale: Double) {
+        changeScaleCoefficient(newScale)
+    }
+
+    fun onResize() {
+        redrawLines()
+    }
+
+    private fun stopDrawing() {
         if (!isDrawing) return
-        drawLine(simplifyLine(drawingLine, SIMPLIFICATION_EPSILON))
+        val simplifiedLine = simplifyLine(drawingLine, SIMPLIFICATION_EPSILON)
+        val smoothLine = conversionStorage.addLine(simplifiedLine)
+        smoothLine?.let {
+            canvas.drawLine(smoothLine.points, Paint(strokeColor = it.strokeColor, strokeWidth = it.strokeWidth))
+        }
         drawingLine.clear()
         isDrawing = false
+        redrawLines()
     }
 
     private fun calculateScaleCoefficient(wheelDelta: Double): Double {
@@ -64,13 +105,14 @@ class DrawingBoard(private val canvas: SharedCanvas) {
         return scaleFactor * scaleCoefficient
     }
 
-    fun drawLine(simplifiedLine: Line) {
-        canvas.drawLine(conversionStorage.addLine(simplifiedLine)?.points ?: return, paint)
-    }
-
     private fun redrawLines() {
         canvas.clear()
-        conversionStorage.getDisplayingLines().forEach { canvas.drawLine(it.points, paint) }
+        conversionStorage.getDisplayingLines()
+            .forEach { canvas.drawLine(it.points, Paint(strokeColor = it.strokeColor, strokeWidth = it.strokeWidth)) }
+        canvas.drawLine(
+            drawingLine.points,
+            Paint(strokeColor = drawingLine.strokeColor, strokeWidth = drawingLine.strokeWidth)
+        )
     }
 
     fun clearLineAtPoint(point: Point) {
@@ -83,10 +125,18 @@ class DrawingBoard(private val canvas: SharedCanvas) {
         if (scaleCoefficient <= 0) return
         conversionStorage.changeScaleCoefficient(scaleCoefficient)
         this.scaleCoefficient = scaleCoefficient
+        onScaleChanged(scaleCoefficient)
         redrawLines()
     }
 
+    fun cleanup() {
+        canvas.cleanup()
+    }
+
     companion object {
+        val defaultColors = listOf("#F85353", "#F8B653", "#38CA46", "#388CCA", "#9238CA", "#FA78C6", "#3C3C3C")
+        val strokeWidthRange = 4..40
+        const val defaultStrokeWidth = 10
         private const val SIMPLIFICATION_EPSILON = 2.0
         private const val WHEEL_DELTA_FACTOR = 1.05
     }

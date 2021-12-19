@@ -7,10 +7,13 @@ fun scalePoint(point: Point, centerPoint: Point, scaleCoefficient: Double): Poin
     point * scaleCoefficient + centerPoint * (1.0 - scaleCoefficient)
 
 fun scaleLine(line: Line, centerPoint: Point, scaleCoefficient: Double): Line =
-    Line(line.points.map { scalePoint(it, centerPoint, scaleCoefficient) })
+    line.copy(
+        linePoints = line.points.map { scalePoint(it, centerPoint, scaleCoefficient) },
+        strokeWidth = line.strokeWidth * scaleCoefficient
+    )
 
 fun translateLine(line: Line, translationVector: Point): Line =
-    Line(line.points.map { it + translationVector })
+    line.copy(linePoints = line.points.map { it + translationVector })
 
 fun convertPointToAnotherSystemWithoutScaling(point: Point, newOriginPoint: Point): Point {
     return (point - newOriginPoint).apply { y = -y }
@@ -37,7 +40,7 @@ fun convertPointFromWorldToScreenSystem(
     screenWidth: Double,
     screenHeight: Double,
     scaleCoefficient: Double
-) : Point {
+): Point {
     val centerPoint = Point(screenWidth, screenHeight) / 2.0
     val screenOriginPoint = Point(cameraPoint.x - centerPoint.x, cameraPoint.y + centerPoint.y)
     val notScaledPointInScreenSystem = convertPointToAnotherSystemWithoutScaling(point, screenOriginPoint)
@@ -50,9 +53,12 @@ fun convertLineFromScreenToWorldSystem(
     screenWidth: Double,
     screenHeight: Double,
     scaleCoefficient: Double
-): Line = Line(line.points.map {
-    convertPointFromScreenToWorldSystem(it, cameraPoint, screenWidth, screenHeight, scaleCoefficient)
-})
+): Line = line.copy(
+    linePoints = line.points.map {
+        convertPointFromScreenToWorldSystem(it, cameraPoint, screenWidth, screenHeight, scaleCoefficient)
+    },
+    strokeWidth = line.strokeWidth * scaleCoefficient
+)
 
 fun convertLineFromWorldToScreenSystem(
     line: Line,
@@ -60,9 +66,12 @@ fun convertLineFromWorldToScreenSystem(
     screenWidth: Double,
     screenHeight: Double,
     scaleCoefficient: Double
-) : Line = Line(line.points.map {
-    convertPointFromWorldToScreenSystem(it, cameraPoint, screenWidth, screenHeight, scaleCoefficient)
-})
+): Line = line.copy(
+    linePoints = line.points.map {
+        convertPointFromWorldToScreenSystem(it, cameraPoint, screenWidth, screenHeight, scaleCoefficient)
+    },
+    strokeWidth = line.strokeWidth * scaleCoefficient
+)
 
 fun transformPoint(
     point: Point,
@@ -96,7 +105,18 @@ fun transformLine(
     screenWidth: Double,
     screenHeight: Double,
     scaleCoefficient: Double
-): Line = Line(line.points.map { transformPoint(it, cameraPoint, screenWidth, screenHeight, scaleCoefficient) })
+): Line = line.copy(
+    linePoints = line.points.map {
+        transformPoint(
+            it,
+            cameraPoint,
+            screenWidth,
+            screenHeight,
+            scaleCoefficient
+        )
+    },
+    strokeWidth = line.strokeWidth * scaleCoefficient
+)
 
 fun detransformLine(
     line: Line,
@@ -104,4 +124,15 @@ fun detransformLine(
     screenWidth: Double,
     screenHeight: Double,
     scaleCoefficient: Double
-): Line = Line(line.points.map { detransformPoint(it, cameraPoint, screenWidth, screenHeight, scaleCoefficient) })
+): Line = line.copy(
+    linePoints = line.points.map {
+        detransformPoint(
+            it,
+            cameraPoint,
+            screenWidth,
+            screenHeight,
+            scaleCoefficient
+        )
+    },
+    strokeWidth = line.strokeWidth / scaleCoefficient
+)
