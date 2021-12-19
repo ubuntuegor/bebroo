@@ -5,11 +5,17 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Path
+import android.graphics.PixelFormat
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 
 class MySurfaceView(context: Context?) : SurfaceView(context) {
+    init {
+        super.setZOrderOnTop(true)
+        holder.setFormat(PixelFormat.TRANSLUCENT)
+    }
+
     var surfaceHolder: SurfaceHolder = holder
 
     var onTouchListener: ((MotionEvent) -> Unit)? = null
