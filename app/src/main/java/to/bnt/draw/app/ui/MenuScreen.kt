@@ -334,7 +334,9 @@ fun MenuSettings(
             Divider()
             DropdownMenuItem(onClick = {
                 MainScope().launch { userPreferencesManager.cleanUserPreferences() }
-                navController.popBackStack()
+                navController.navigate("login") {
+                    popUpTo("menu") { inclusive = true }
+                }
             }) { Text(stringResource(R.string.exit)) }
         }
     }
