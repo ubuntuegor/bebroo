@@ -2,13 +2,12 @@ package to.bnt.draw.shared.drawing
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Path
+import android.graphics.*
 import android.graphics.PixelFormat
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import to.bnt.draw.shared.drawing.drawing_structures.Point
 
 class MySurfaceView(context: Context?) : SurfaceView(context) {
     init {
@@ -29,7 +28,7 @@ class MySurfaceView(context: Context?) : SurfaceView(context) {
 
 class AndroidCanvas(context: Context?) : SharedCanvas {
     val surfaceView = MySurfaceView(context)
-    val surfacePaint: android.graphics.Paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+    private val surfacePaint: android.graphics.Paint = Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
 
     override val width
         get() = surfaceView.width
@@ -71,17 +70,11 @@ class AndroidCanvas(context: Context?) : SharedCanvas {
         surfaceView.surfaceHolder.unlockCanvasAndPost(canvas)
     }
 
-    override fun drawCircle(center: Point, radius: Double, paint: Paint) {
+    override fun clear() {
         val canvas: Canvas = surfaceView.surfaceHolder.lockCanvas()
-        surfacePaint.color = Color.parseColor(paint.fillColor)
-        surfacePaint.style = android.graphics.Paint.Style.FILL
-        canvas.drawCircle(center.x.toFloat(), center.y.toFloat(), radius.toFloat(), surfacePaint)
-        if (paint.strokeWidth > 0) {
-            surfacePaint.color = Color.parseColor(paint.strokeColor)
-            surfacePaint.strokeWidth = paint.strokeWidth.toFloat()
-            surfacePaint.style = android.graphics.Paint.Style.STROKE
-            canvas.drawCircle(center.x.toFloat(), center.y.toFloat(), radius.toFloat(), surfacePaint)
-        }
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
         surfaceView.surfaceHolder.unlockCanvasAndPost(canvas)
     }
+
+    override fun cleanup() {}
 }
