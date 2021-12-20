@@ -4,16 +4,20 @@ import io.ktor.client.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
+import io.ktor.client.features.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.http.cio.websocket.*
 import to.bnt.draw.shared.apiClient.exceptions.*
+import to.bnt.draw.shared.structures.Action
 import to.bnt.draw.shared.structures.Board
 import to.bnt.draw.shared.structures.User
 
 class ApiClient(internal val apiUrl: String, var token: String? = null) {
     private val client = HttpClient {
+        install(WebSockets)
         install(JsonFeature) {
             serializer = KotlinxSerializer()
         }
@@ -104,10 +108,11 @@ class ApiClient(internal val apiUrl: String, var token: String? = null) {
         }
     }
 
-    suspend fun getBoard(uuid: String, showContributors: Boolean = false): Board {
+    suspend fun getBoard(uuid: String, showContributors: Boolean = false, showFigures: Boolean = false): Board {
         val endpoint = "$boardEndpoint/$uuid"
         return client.get(apiUrl + endpoint) {
             parameter("showContributors", showContributors)
+            parameter("showFigures", showFigures)
             appendToken()
         }
     }
@@ -127,7 +132,7 @@ class ApiClient(internal val apiUrl: String, var token: String? = null) {
         }
     }
 
-    suspend fun createBoard(name: String) : String {
+    suspend fun createBoard(name: String): String {
         val endpoint = "$boardEndpoint/create"
         val response: Map<String, String> = client.submitForm(apiUrl + endpoint, Parameters.build {
             append("name", name)
@@ -137,6 +142,30 @@ class ApiClient(internal val apiUrl: String, var token: String? = null) {
         }
 
         return response["uuid"] ?: throw ApiException("Ошибка создания доски")
+    }
+
+    suspend fun boardWebSocket(
+        uuid: String,
+        figureId: Long?,
+        onConnected: (DefaultClientWebSocketSession) -> Unit,
+        onAction: (Action) -> Unit
+    ) {
+        val wsUrl = apiUrl.replaceFirst("https", "wss").replaceFirst("http", "ws")
+        val endpoint = "$boardEndpoint/$uuid/websocket"
+        client.webSocket(wsUrl + endpoint, {
+            token?.let {
+                parameter("token", token)
+            }
+            figureId?.let {
+                parameter("figureId", figureId)
+            }
+        }) {
+            onConnected(this)
+            for (frame in incoming) {
+                frame as? Frame.Text ?: continue
+                onAction(Action.fromJson(frame.readText()))
+            }
+        }
     }
 
     fun close() {

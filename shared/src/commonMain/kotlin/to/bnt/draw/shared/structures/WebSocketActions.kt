@@ -19,15 +19,15 @@ sealed class Action {
 
 @Serializable
 @SerialName("addFigure")
-class AddFigure(val localId: Int? = null, val figure: Figure) : Action()
+class AddFigure(val localId: Long? = null, val figure: Figure) : Action()
 
 @Serializable
 @SerialName("figureAck")
-class FigureAck(val localId: Int, val id: Int) : Action()
+class FigureAck(val localId: Long, val id: Long) : Action()
 
 @Serializable
 @SerialName("removeFigure")
-class RemoveFigure(val figureId: Int) : Action()
+class RemoveFigure(val figureId: Long) : Action()
 
 @Serializable
 @SerialName("connectedUsers")

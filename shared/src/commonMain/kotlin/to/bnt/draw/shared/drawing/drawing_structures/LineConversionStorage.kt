@@ -16,12 +16,12 @@ private class LineRectanglesStorage {
 
     private val rectanglesContainingLine = mutableMapOf<Long, Rectangle>()
 
-    private val lineExtremeCoordinateComparator = Comparator<LineCoordinate> {
-            a, b -> when {
-        a.coordinateValue < b.coordinateValue -> -1
-        a.coordinateValue > b.coordinateValue -> 1
-        else -> 0
-    }
+    private val lineExtremeCoordinateComparator = Comparator<LineCoordinate> { a, b ->
+        when {
+            a.coordinateValue < b.coordinateValue -> -1
+            a.coordinateValue > b.coordinateValue -> 1
+            else -> 0
+        }
     }
 
     fun addRectangle(lineID: Long, rectangle: Rectangle) {
@@ -34,8 +34,7 @@ private class LineRectanglesStorage {
         return rectanglesContainingLine.remove(lineID)
     }
 
-    private fun ArrayList<LineCoordinate>
-            .findInsertionIndexByOrder(lineCoordinate: LineCoordinate): Int {
+    private fun ArrayList<LineCoordinate>.findInsertionIndexByOrder(lineCoordinate: LineCoordinate): Int {
         val binarySearchValue = this.binarySearch(lineCoordinate, lineExtremeCoordinateComparator)
         return if (binarySearchValue >= 0) binarySearchValue else -(binarySearchValue + 1)
     }
@@ -62,8 +61,7 @@ private class LineRectanglesStorage {
         return false
     }
 
-    private fun ArrayList<LineCoordinate>
-            .smallestIndexForCoordinateGreaterThanOrEqual(value: Double): Int {
+    private fun ArrayList<LineCoordinate>.smallestIndexForCoordinateGreaterThanOrEqual(value: Double): Int {
         var smallestSuitableLineIndex = findInsertionIndexByOrder(LineCoordinate(0L, value))
         while (smallestSuitableLineIndex >= 1) {
             if (this[smallestSuitableLineIndex - 1].coordinateValue < value)
@@ -73,8 +71,7 @@ private class LineRectanglesStorage {
         return smallestSuitableLineIndex
     }
 
-    private fun ArrayList<LineCoordinate>
-            .biggestIndexForCoordinateLessThanOrEqual(value: Double): Int {
+    private fun ArrayList<LineCoordinate>.biggestIndexForCoordinateLessThanOrEqual(value: Double): Int {
         var biggestSuitableLineIndex = findInsertionIndexByOrder(LineCoordinate(0L, value))
         --biggestSuitableLineIndex
         while (biggestSuitableLineIndex < lastIndex) {
@@ -109,13 +106,11 @@ private class LineRectanglesStorage {
         rectanglesContainingLine.remove(lineID)
     }
 
-    private fun ArrayList<LineCoordinate>.
-            getLinesWithCoordinateGreaterThanOrEqual(value: Double): List<Long> =
+    private fun ArrayList<LineCoordinate>.getLinesWithCoordinateGreaterThanOrEqual(value: Double): List<Long> =
         map { it.lineID }
             .slice(smallestIndexForCoordinateGreaterThanOrEqual(value)..lastIndex)
 
-    private fun ArrayList<LineCoordinate>.
-            getLinesWithCoordinateLessThanOrEqual(value: Double): List<Long> =
+    private fun ArrayList<LineCoordinate>.getLinesWithCoordinateLessThanOrEqual(value: Double): List<Long> =
         map { it.lineID }
             .slice(0..biggestIndexForCoordinateLessThanOrEqual(value))
 
@@ -168,6 +163,12 @@ private class LineRectanglesStorage {
                 getLinesWithContainingRectangles(givenRectangle)
     }
 }
+
+data class AddLineResult(
+    val id: Long,
+    val worldSimplifiedLine: Line,
+    val screenSmoothedLine: Line
+)
 
 class LineConversionStorage(private var screenWidth: Int, private var screenHeight: Int) {
     private val simplifiedLinesStorage = LineStorage()
@@ -224,7 +225,8 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
             scaleCoefficient
         )
 
-    fun addLine(simplifiedLine: Line): Line? {
+    fun addLine(simplifiedLine: Line): AddLineResult? {
+        if (simplifiedLine.points.size < 2) return null
         val lineID = calculateLineID()
         val simplifiedLineInWorldSystem =
             simplifiedLinesStorage.addLine(
@@ -241,19 +243,38 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
         )
         linesID.add(lineID)
 
-        return convertLineFromWorldToScreenSystem(smoothedLineInWorldSystem)
+        return AddLineResult(
+            lineID,
+            simplifiedLineInWorldSystem,
+            convertLineFromWorldToScreenSystem(smoothedLineInWorldSystem)
+        )
     }
 
-    fun addAll(lines: List<Line>) = lines.forEach { addLine(it) }
+    fun addWorldLine(simplifiedLine: Line): AddLineResult? {
+        val lineID = calculateLineID()
+        simplifiedLinesStorage.addLine(lineID, simplifiedLine)
+        val smoothedLineInWorldSystem = addLineWithSmooth(lineID, simplifiedLine)
+        rectanglesStorage.addRectangle(
+            lineID,
+            smoothedLineInWorldSystem.getContainingRectangle() ?: return null
+        )
+        linesID.add(lineID)
 
-    private fun removeLine(lineID: Long) {
+        return AddLineResult(
+            lineID,
+            simplifiedLine,
+            convertLineFromWorldToScreenSystem(smoothedLineInWorldSystem)
+        )
+    }
+
+    fun removeLine(lineID: Long) {
         simplifiedLinesStorage.removeLine(lineID)
         smoothedLinesStorage.removeLine(lineID)
         rectanglesStorage.removeRectangleByLineID(lineID)
         linesID.remove(lineID)
     }
 
-    private fun getLineAtPoint(point: Point): Long? {
+    fun getLineAtPoint(point: Point): Long? {
         val pointInWorldSystem = this.convertPointFromScreenToWorldSystem(point)
         val areaEpsilonVector = Point(POINTER_AREA_EPSILON, POINTER_AREA_EPSILON)
         val pointRectangle = Rectangle(
@@ -267,11 +288,12 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
         }
     }
 
-    fun removeLineAtPoint(point: Point) {
+    fun removeLineAtPoint(point: Point): Long? {
         val removedLineID = getLineAtPoint(point)
-        removedLineID ?: return
+        removedLineID ?: return null
         removeLine(removedLineID)
         rectanglesStorage.removeRectangleByLineID(removedLineID)
+        return removedLineID
     }
 
     private fun convertDisplayingLinesInScreenSystem(): List<Line> {
@@ -293,7 +315,7 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
     }
 
     fun translateCamera(translationVector: Point) {
-        cameraPoint += translationVector
+        cameraPoint += translationVector / scaleCoefficient
     }
 
     companion object {

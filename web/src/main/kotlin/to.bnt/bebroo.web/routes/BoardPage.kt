@@ -30,6 +30,7 @@ import to.bnt.draw.shared.apiClient.exceptions.ApiException
 import to.bnt.draw.shared.apiClient.exceptions.ForbiddenException
 import to.bnt.draw.shared.apiClient.exceptions.InvalidTokenException
 import to.bnt.draw.shared.drawing.DrawingBoard
+import to.bnt.draw.shared.drawing.DrawingBoardWebSocket
 import to.bnt.draw.shared.drawing.JsCanvas
 import to.bnt.draw.shared.structures.Board
 import to.bnt.draw.shared.structures.User
@@ -47,14 +48,11 @@ val boardPage = fc<Props> {
     val history = useHistory()
 
     val client: ApiClient by useState(ApiClient(Config.API_PATH))
-    var hasLoaded by useState(false)
     var user: User? by useState(null)
     var board: Board? by useState(null)
-    var usersConnected: List<User>? by useState(null)
+    var connectedUsers: List<User> by useState(listOf())
 
-    var drawingBoard: DrawingBoard? by useState(null)
-    var canvasWidth by useState(window.innerWidth)
-    var canvasHeight by useState(window.innerHeight)
+    var drawingBoard: DrawingBoardWebSocket? by useState(null)
     var showingPanel by useState(ShowingPanel.None)
 
     val redirectToAuth = {
@@ -67,11 +65,6 @@ val boardPage = fc<Props> {
         history.push("/home")
     }
 
-    val resizeHandler = { _: Event ->
-        canvasWidth = window.innerWidth
-        canvasHeight = window.innerHeight
-    }
-
     useEffect {
         board?.let {
             document.title = "${it.name} - ${Config.APP_NAME}"
@@ -81,19 +74,17 @@ val boardPage = fc<Props> {
     }
 
     useEffectOnce {
-        window.addEventListener("resize", resizeHandler)
-
         val token = window.localStorage.getItem(Config.LOCAL_STORAGE_TOKEN_KEY)
         val uuid = params["uuid"] ?: throw RuntimeException("Trying to open board without uuid")
 
         client.token = token
         MainScope().launch {
             try {
-                token?.let { user = client.getMe() }
+                val loadedUser = token?.let { client.getMe() }
+                user = loadedUser
                 board = client.getBoard(uuid)
                 val canvas = JsCanvas(canvasId)
-                drawingBoard = DrawingBoard(canvas)
-                hasLoaded = true
+                drawingBoard = DrawingBoardWebSocket(canvas, client, uuid, loadedUser?.id)
             } catch (e: InvalidTokenException) {
                 window.localStorage.removeItem(Config.LOCAL_STORAGE_TOKEN_KEY)
                 redirectToAuth()
@@ -107,22 +98,16 @@ val boardPage = fc<Props> {
 
         cleanup {
             client.close()
-            drawingBoard?.cleanup()
-            window.removeEventListener("resize", resizeHandler)
         }
     }
 
-    styledDiv {
-        css {
-            position = Position.fixed
-        }
-        canvas {
-            attrs {
-                id = canvasId
-                this.width = canvasWidth.toString()
-                this.height = canvasHeight.toString()
-            }
-        }
+    boardCanvas {
+        attrs.canvasId = canvasId
+        attrs.drawingBoard = drawingBoard
+        attrs.onConnectionClosed = { connectedUsers = listOf() }
+        attrs.onApiException = { e: ApiException -> window.alert(e.message ?: "Ошибка подключения к доске") }
+        attrs.connectedUsers = connectedUsers
+        attrs.onConnectedUsersChange = { connectedUsers = it }
     }
 
     styledDiv {
@@ -134,7 +119,7 @@ val boardPage = fc<Props> {
 
         child(mainCard) {
             attrs.board = board
-            attrs.usersConnected = usersConnected
+            attrs.usersConnected = connectedUsers
         }
     }
 
@@ -173,7 +158,7 @@ val boardPage = fc<Props> {
     }
 
     // Board controls
-    if (hasLoaded) {
+    drawingBoard?.let {
         user?.let {
             styledDiv {
                 css {
@@ -226,6 +211,69 @@ val boardPage = fc<Props> {
 
             zoomControl {
                 attrs.drawingBoard = drawingBoard
+            }
+        }
+    }
+}
+
+external interface BoardCanvasProps : Props {
+    var canvasId: String
+    var drawingBoard: DrawingBoardWebSocket?
+    var onConnectionClosed: () -> Unit
+    var onApiException: (ApiException) -> Unit
+    var connectedUsers: List<User>
+    var onConnectedUsersChange: (List<User>) -> Unit
+}
+
+val boardCanvas = fc<BoardCanvasProps> { props ->
+    var canvasWidth by useState(window.innerWidth)
+    var canvasHeight by useState(window.innerHeight)
+
+    val resizeHandler = { _: Event ->
+        canvasWidth = window.innerWidth
+        canvasHeight = window.innerHeight
+    }
+
+    useEffectOnce {
+        window.addEventListener("resize", resizeHandler)
+
+        cleanup {
+            window.removeEventListener("resize", resizeHandler)
+        }
+    }
+
+    useEffect {
+        props.drawingBoard?.onConnectionClosed = props.onConnectionClosed
+        props.drawingBoard?.onApiException = props.onApiException
+        props.drawingBoard?.onConnectedUsers = {
+            props.onConnectedUsersChange(props.connectedUsers + it)
+        }
+        props.drawingBoard?.onDisconnectedUser = { userId ->
+            val newUsers = props.connectedUsers.toMutableList()
+            newUsers.lastOrNull { it.id == userId }?.let {
+                newUsers -= it
+            }
+            props.onConnectedUsersChange(newUsers)
+        }
+    }
+
+    useEffect(props.drawingBoard) {
+        props.drawingBoard?.connect()
+
+        cleanup {
+            props.drawingBoard?.cleanup()
+        }
+    }
+
+    styledDiv {
+        css {
+            position = Position.fixed
+        }
+        canvas {
+            attrs {
+                id = props.canvasId
+                this.width = canvasWidth.toString()
+                this.height = canvasHeight.toString()
             }
         }
     }
@@ -316,14 +364,16 @@ val mainCard = fc<MainCardProps> { props ->
         } ?: spinner(Color.black, 50.px)
 
         props.usersConnected?.let {
-            styledP {
-                css {
-                    marginTop = 8.px
-                    marginBottom = 12.px
-                    fontSize = 12.px
-                    color = Color("#969696")
+            props.board?.let {
+                styledP {
+                    css {
+                        marginTop = 8.px
+                        marginBottom = 12.px
+                        fontSize = 12.px
+                        color = Color("#969696")
+                    }
+                    +"Сейчас редактируют:"
                 }
-                +"Сейчас редактируют:"
             }
 
             styledDiv {

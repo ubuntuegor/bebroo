@@ -57,7 +57,7 @@ fun convertLineFromScreenToWorldSystem(
     linePoints = line.points.map {
         convertPointFromScreenToWorldSystem(it, cameraPoint, screenWidth, screenHeight, scaleCoefficient)
     },
-    strokeWidth = line.strokeWidth * scaleCoefficient
+    strokeWidth = line.strokeWidth / scaleCoefficient
 )
 
 fun convertLineFromWorldToScreenSystem(
