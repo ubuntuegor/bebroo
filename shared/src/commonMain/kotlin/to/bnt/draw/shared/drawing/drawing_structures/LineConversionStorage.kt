@@ -269,20 +269,19 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
     }
 
     fun getLineAtPoint(point: Point): Long? {
+        val pointInWorldSystem = this.convertPointFromScreenToWorldSystem(point)
         val pointerAreaSideLength = findPointerAreaSideLength()
         val pointRectangle = Rectangle(
-            Point(point.x - pointerAreaSideLength, point.y + pointerAreaSideLength),
-            Point(point.x + pointerAreaSideLength, point.y - pointerAreaSideLength)
+            Point(pointInWorldSystem.x - pointerAreaSideLength, pointInWorldSystem.y + pointerAreaSideLength),
+            Point(pointInWorldSystem.x + pointerAreaSideLength, pointInWorldSystem.y - pointerAreaSideLength)
         )
 
         val suspectedLinesID = rectanglesStorage.getLinesWithIntersectingRectangles(pointRectangle)
-        println(suspectedLinesID)
-        return getNearestLineAtPointerArea(suspectedLinesID, point)
+        return getNearestLineAtPointerArea(suspectedLinesID, pointInWorldSystem)
     }
 
     fun removeLineAtPoint(point: Point): Long? {
-        val pointInWorldSystem = this.convertPointFromScreenToWorldSystem(point)
-        val removedLineID = getLineAtPoint(pointInWorldSystem)
+        val removedLineID = getLineAtPoint(point)
         removedLineID ?: return null
         removeLine(removedLineID)
         rectanglesStorage.removeRectangleByLineID(removedLineID)
