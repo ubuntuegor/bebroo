@@ -92,7 +92,7 @@ open class DrawingBoard(private val canvas: SharedCanvas) {
 
     protected open fun stopDrawing(): AddLineResult? {
         if (!isDrawing) return null
-        val result = if (drawingLine.points.isNotEmpty()) {
+        val result = if (drawingLine.points.size > 2) {
             val simplifiedLine = simplifyLine(drawingLine, SIMPLIFICATION_EPSILON)
             val addResult = conversionStorage.addLine(simplifiedLine)
             addResult?.screenSmoothedLine?.let {
