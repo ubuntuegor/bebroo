@@ -17,11 +17,11 @@ private class LineRectanglesStorage {
     private val rectanglesContainingLine = mutableMapOf<Long, Rectangle>()
 
     private val lineExtremeCoordinateComparator = Comparator<LineCoordinate> {
-            a, b -> when {
-        a.coordinateValue < b.coordinateValue -> -1
-        a.coordinateValue > b.coordinateValue -> 1
-        else -> 0
-    }
+        a, b -> when {
+            a.coordinateValue < b.coordinateValue -> -1
+            a.coordinateValue > b.coordinateValue -> 1
+            else -> 0
+        }
     }
 
     fun addRectangle(lineID: Long, rectangle: Rectangle) {
@@ -130,42 +130,20 @@ private class LineRectanglesStorage {
         return this.map { it.lineID }.slice(smallestSuitableLineIndex..biggestSuitableLineIndex)
     }
 
-    private fun getLinesWithContainingRectangles(innerRectangle: Rectangle): Set<Long> {
+    fun getLinesWithIntersectingRectangles(intersectedRectangle: Rectangle): Set<Long> {
         val linesByLeftX =
-            linesSortedByLeftX.getLinesWithCoordinateLessThanOrEqual(innerRectangle.leftTopPoint.x)
+            linesSortedByLeftX.getLinesWithCoordinateLessThanOrEqual(intersectedRectangle.rightDownPoint.x)
         val linesByRightX =
-            linesSortedByRightX.getLinesWithCoordinateGreaterThanOrEqual(innerRectangle.rightDownPoint.x)
+            linesSortedByRightX.getLinesWithCoordinateGreaterThanOrEqual(intersectedRectangle.leftTopPoint.x)
         val linesByTopY =
-            linesSortedByTopY.getLinesWithCoordinateGreaterThanOrEqual(innerRectangle.leftTopPoint.y)
+            linesSortedByTopY.getLinesWithCoordinateGreaterThanOrEqual(intersectedRectangle.rightDownPoint.y)
         val linesByDownY =
-            linesSortedByDownY.getLinesWithCoordinateLessThanOrEqual(innerRectangle.rightDownPoint.y)
+            linesSortedByDownY.getLinesWithCoordinateLessThanOrEqual(intersectedRectangle.leftTopPoint.y)
 
-        return linesByLeftX
+        return linesByLeftX.toSet()
             .intersect(linesByRightX.toSet())
             .intersect(linesByTopY.toSet())
             .intersect(linesByDownY.toSet())
-    }
-
-    private fun getLinesWithIntersectingRectangles(intersectedRectangle: Rectangle): Set<Long> {
-        val linesByLeftX = linesSortedByLeftX.getLinesWithCoordinateInSegment(
-            intersectedRectangle.leftTopPoint.x, intersectedRectangle.rightDownPoint.x
-        )
-        val linesByRightX = linesSortedByRightX.getLinesWithCoordinateInSegment(
-            intersectedRectangle.leftTopPoint.x, intersectedRectangle.rightDownPoint.x
-        )
-        val linesByTopY = linesSortedByTopY.getLinesWithCoordinateInSegment(
-            intersectedRectangle.rightDownPoint.y, intersectedRectangle.leftTopPoint.y
-        )
-        val linesByDownY = linesSortedByDownY.getLinesWithCoordinateInSegment(
-            intersectedRectangle.rightDownPoint.y, intersectedRectangle.leftTopPoint.y
-        )
-
-        return linesByLeftX.union(linesByRightX).filter { linesByDownY.union(linesByTopY).contains(it) }.toSet()
-    }
-
-    fun getRectanglesWithCommonPart(givenRectangle: Rectangle): Set<Long> {
-        return getLinesWithIntersectingRectangles(givenRectangle) +
-                getLinesWithContainingRectangles(givenRectangle)
     }
 }
 
@@ -201,9 +179,9 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
         convertPointFromScreenToWorldSystem(
             point,
             cameraPoint,
-            scaleCoefficient,
             screenWidth.toDouble(),
-            screenHeight.toDouble()
+            screenHeight.toDouble(),
+            scaleCoefficient
         )
 
     private fun convertLineFromScreenToWorldSystem(line: Line) =
@@ -253,22 +231,37 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
         linesID.remove(lineID)
     }
 
+    private fun findPointerAreaSideLength() = POINTER_AREA_EPSILON / scaleCoefficient
+
+    private fun getNearestLineAtPointerArea(suspectedLinesID: Set<Long>, point: Point): Long? {
+        var nearestLineID: Long? = null
+        var minDistance = Double.POSITIVE_INFINITY
+        suspectedLinesID.forEach {
+            val distance = smoothedLinesStorage.getLine(it)?.findNearestPointTo(point) ?: Double.POSITIVE_INFINITY
+            if (distance <= findPointerAreaSideLength() && distance < minDistance) {
+                nearestLineID = it
+                minDistance = distance
+            }
+        }
+
+        return nearestLineID
+    }
+
     private fun getLineAtPoint(point: Point): Long? {
-        val pointInWorldSystem = this.convertPointFromScreenToWorldSystem(point)
-        val areaEpsilonVector = Point(POINTER_AREA_EPSILON, POINTER_AREA_EPSILON)
+        val pointerAreaSideLength = findPointerAreaSideLength()
         val pointRectangle = Rectangle(
-            pointInWorldSystem - areaEpsilonVector,
-            pointInWorldSystem + areaEpsilonVector
+            Point(point.x - pointerAreaSideLength, point.y + pointerAreaSideLength),
+            Point(point.x + pointerAreaSideLength, point.y - pointerAreaSideLength)
         )
 
-        val suspectedLinesID = rectanglesStorage.getRectanglesWithCommonPart(pointRectangle)
-        return suspectedLinesID.minByOrNull {
-            smoothedLinesStorage.getLine(it)?.findNearestPointTo(point) ?: Double.POSITIVE_INFINITY
-        }
+        val suspectedLinesID = rectanglesStorage.getLinesWithIntersectingRectangles(pointRectangle)
+        println(suspectedLinesID)
+        return getNearestLineAtPointerArea(suspectedLinesID, point)
     }
 
     fun removeLineAtPoint(point: Point) {
-        val removedLineID = getLineAtPoint(point)
+        val pointInWorldSystem = this.convertPointFromScreenToWorldSystem(point)
+        val removedLineID = getLineAtPoint(pointInWorldSystem)
         removedLineID ?: return
         removeLine(removedLineID)
         rectanglesStorage.removeRectangleByLineID(removedLineID)
@@ -299,7 +292,7 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
 
     companion object {
         const val DEFAULT_DISTRIBUTION_SEGMENTS_COUNT = 15L
-        const val POINTER_AREA_EPSILON = 10.0
+        const val POINTER_AREA_EPSILON = 50.0
         const val MIN_SCALE_VALUE = 0.01
         const val MAX_SCALE_VALUE = 100.0
         const val MAX_DISTRIBUTION_SEGMENTS_COUNT = 30L
