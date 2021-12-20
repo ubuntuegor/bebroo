@@ -144,6 +144,7 @@ empty
 
 `WS /api/board/{uuid}/websocket`
 
+- `token`: `String`
 - `figureId`: `int?` — last received figure ID
 
 Communication using JSON
