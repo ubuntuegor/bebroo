@@ -1,7 +1,11 @@
 package to.bnt.draw.server.api.board
 
-import io.ktor.auth.*
-import io.ktor.auth.jwt.*
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.exceptions.JWTVerificationException
+import com.auth0.jwt.impl.JWTParser
+import com.auth0.jwt.interfaces.DecodedJWT
+import com.auth0.jwt.interfaces.Payload
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
@@ -10,8 +14,6 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
-import to.bnt.draw.server.api.exceptions.ApiException
-import to.bnt.draw.server.api.exceptions.ForbiddenException
 import to.bnt.draw.server.models.Boards
 import to.bnt.draw.server.models.Figures
 import to.bnt.draw.server.models.Users
@@ -26,31 +28,46 @@ suspend fun DefaultWebSocketServerSession.sendAction(action: Action) {
 }
 
 suspend fun DefaultWebSocketServerSession.checkBoardAccessAndClose(boardUuid: UUID, userId: Int?): Boolean {
-    val hasAccess = userId?.let {
-        transaction {
-            val board =
-                Boards.innerJoin(Users).select { Boards.id eq boardUuid }.firstOrNull() ?: return@transaction false
+    val hasAccess = transaction {
+        val board =
+            Boards.innerJoin(Users).select { Boards.id eq boardUuid }.firstOrNull() ?: return@transaction false
 
-            board[Boards.isPublic] || board[Users.id].value == userId
-        }
-    } ?: false
+        board[Boards.isPublic] || board[Users.id].value == userId
+    }
     if (!hasAccess) close()
     return hasAccess
 }
 
+private fun DecodedJWT.parsePayload(): Payload {
+    val payloadString = String(Base64.getUrlDecoder().decode(payload))
+    return JWTParser().parsePayload(payloadString)
+}
+
 fun Route.boardWebSocket() {
+    val secret = application.environment.config.property("jwt.secret").getString()
+    val jwtVerifier = JWT.require(Algorithm.HMAC256(secret)).build()
+
+    fun getId(token: String): Payload? {
+        return try {
+            jwtVerifier.verify(token).parsePayload()
+        } catch (e: JWTVerificationException) {
+            null
+        }
+    }
+
     val connectionsForBoard = Collections.synchronizedMap(mutableMapOf<UUID, MutableSet<Connection>>())
 
     webSocket("/{uuid}/websocket") {
-        val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("id")?.asInt()
+        val userId = call.request.queryParameters["token"]?.let { getId(it)?.getClaim("id")?.asInt() }
         val uuidParameter = call.parameters["uuid"] ?: throw RuntimeException("Trying to open board without uuid")
         val boardUuid = try {
             UUID.fromString(uuidParameter)
         } catch (e: IllegalArgumentException) {
-            throw ApiException("Такой доски не существует")
+            close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Такой доски не существует"))
+            return@webSocket
         }
 
-        if (!checkBoardAccessAndClose(boardUuid, userId)) throw ForbiddenException()
+        if (!checkBoardAccessAndClose(boardUuid, userId)) return@webSocket
 
         val connection = Connection(userId, this)
         connectionsForBoard[boardUuid] ?: run {
