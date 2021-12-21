@@ -1,5 +1,6 @@
 plugins {
     kotlin("multiplatform")
+    kotlin("plugin.serialization")
     id("com.android.library")
 }
 
@@ -20,7 +21,7 @@ kotlin {
             useJUnitPlatform()
         }
     }
-    js(LEGACY) {
+    js {
         binaries.executable()
         browser {
             commonWebpackConfig {
@@ -29,7 +30,16 @@ kotlin {
         }
     }
     sourceSets {
-        val commonMain by getting
+        val ktorVersion: String by project
+
+        val commonMain by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
+                implementation("io.ktor:ktor-client-core:$ktorVersion")
+                implementation("io.ktor:ktor-client-serialization:$ktorVersion")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
+            }
+        }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
@@ -37,6 +47,7 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
+                implementation("io.ktor:ktor-client-android:$ktorVersion")
                 implementation("com.google.android.material:material:1.4.0")
             }
         }
@@ -47,17 +58,21 @@ kotlin {
         }
         val jvmMain by getting
         val jvmTest by getting
-        val jsMain by getting
+        val jsMain by getting {
+            dependencies {
+                implementation("io.ktor:ktor-client-js:$ktorVersion")
+            }
+        }
         val jsTest by getting
     }
 }
 
 android {
-    compileSdkVersion(29)
+    compileSdk = 31
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
-        minSdkVersion(24)
-        targetSdkVersion(29)
+        minSdk = 24
+        targetSdk = 31
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
