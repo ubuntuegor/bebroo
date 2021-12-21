@@ -9,10 +9,7 @@ import com.auth0.jwt.interfaces.Payload
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import to.bnt.draw.server.models.Boards
 import to.bnt.draw.server.models.Figures
@@ -79,7 +76,8 @@ fun Route.boardWebSocket() {
         val lastFigureId = call.request.queryParameters["figureId"]?.toIntOrNull()
         lastFigureId?.let {
             val figures = transaction {
-                Figures.select { (Figures.board eq boardUuid) and (Figures.id greater lastFigureId) }.map {
+                Figures.select { (Figures.board eq boardUuid) and (Figures.id greater lastFigureId) }
+                    .orderBy(Figures.id to SortOrder.ASC).map {
                     Figure(
                         id = it[Figures.id].value,
                         drawingData = it[Figures.drawingData],

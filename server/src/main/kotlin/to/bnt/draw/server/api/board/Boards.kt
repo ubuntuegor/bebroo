@@ -106,7 +106,7 @@ fun Route.openBoard() {
                 }
 
                 val figures = if (showFigures) {
-                    Figures.select { Figures.board eq boardUuid }.map {
+                    Figures.select { Figures.board eq boardUuid }.orderBy(Figures.id to SortOrder.ASC).map {
                         Figure(
                             id = it[Figures.id].value,
                             drawingData = it[Figures.drawingData],
