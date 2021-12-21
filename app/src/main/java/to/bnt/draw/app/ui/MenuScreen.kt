@@ -45,10 +45,23 @@ import to.bnt.draw.shared.util.formatTimestamp
 @Composable
 fun MenuScreen(navController: NavController) {
     var meInfo by remember { mutableStateOf<User?>(null) }
-    MainScope().launch { meInfo = BebrooController.client.getMe() }
+    var requestError by remember { mutableStateOf<String?>(null) }
+    MainScope().launch {
+        try {
+            meInfo = BebrooController.client.getMe()
+        } catch (e: ApiException) {
+            requestError = e.message
+        }
+    }
     Scaffold(topBar = { MenuTopBar(navController, meInfo) }) {
         var listOfBoard by remember { mutableStateOf<List<Board>>(listOf()) }
-        MainScope().launch { listOfBoard = BebrooController.client.listBoards() }
+        MainScope().launch {
+            try {
+                listOfBoard = BebrooController.client.listBoards()
+            } catch (e: ApiException) {
+                requestError = e.message
+            }
+        }
 
         var isRefreshing by remember { mutableStateOf(true) }
         val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
@@ -60,8 +73,41 @@ fun MenuScreen(navController: NavController) {
         }
         SwipeRefresh(state = swipeRefreshState, onRefresh = {
             isRefreshing = !isRefreshing
-            MainScope().launch { listOfBoard = BebrooController.client.listBoards() }
+            MainScope().launch {
+                try {
+                    listOfBoard = BebrooController.client.listBoards()
+                } catch (e: ApiException) {
+                    requestError = e.message
+                }
+            }
         }) {
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                if (listOfBoard.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.board_list_is_empty),
+                        modifier = Modifier.padding(top = 15.dp),
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = stringResource(R.string.create_board_to_start),
+                        modifier = Modifier.padding(top = 10.dp),
+                        color = Color.Gray
+                    )
+                }
+                requestError?.let {
+                    Text(
+                        text = it,
+                        modifier = Modifier.padding(top = 7.dp),
+                        color = Coral,
+                        fontSize = 16.sp,
+                    )
+                    Text(
+                        text = stringResource(R.string.fix_incorrect_token_problem),
+                        modifier = Modifier.padding(top = 7.dp),
+                        fontSize = 16.sp,
+                    )
+                }
+            }
             val scrollState = rememberLazyListState()
             LazyColumn(modifier = Modifier.fillMaxSize(), state = scrollState) {
                 items(listOfBoard) { board ->

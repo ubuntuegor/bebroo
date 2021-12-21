@@ -18,6 +18,8 @@
     <string name="share_board">Поделиться доской</string>
     <string name="board_owner">Создатель доски</string>
     <string name="make_public">Сделать публичной</string>
+    <string name="board_list_is_empty">Досок пока нет</string>
+    <string name="create_board_to_start">Создайте доску, чтобы начать рисовать</string>
     <string name="interactive_desk_for">Интерактивная доска для</string>
     <string name="drawing">рисования</string>
     <string name="together">вместе</string>
@@ -26,5 +28,6 @@
     <string name="change">Сменить</string>
     <string name="share">Поделиться</string>
     <string name="collaborators">Участники</string>
+    <string name="fix_incorrect_token_problem">Перезайдите в аккаунт</string>
     <string name="google_cloud_server_client_id">962158359472-p9oc8fj26079g0t0g2g8ara82v2vh7kk.apps.googleusercontent.com</string>
 </resources>
