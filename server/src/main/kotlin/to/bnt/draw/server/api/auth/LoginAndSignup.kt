@@ -30,14 +30,12 @@ fun Route.login() {
 
             val hash = user[Users.hash] ?: throw ApiException("Вход невозможен")
 
-            if (hash == hashPassword(password)) {
-                user[Users.id].value
-            } else {
-                throw ApiException("Неверный пароль")
-            }
+            if (hash != hashPassword(password)) throw ApiException("Неверный пароль")
+
+            user[Users.id].value
         }
 
-        val token = createToken(application.environment, userId)
+        val token = application.createToken(userId)
         call.respond(mapOf("token" to token))
     }
 }
@@ -65,7 +63,7 @@ fun Route.signup() {
             }.value
         }
 
-        val token = createToken(application.environment, userId)
+        val token = application.createToken(userId)
         call.respond(mapOf("token" to token))
     }
 }

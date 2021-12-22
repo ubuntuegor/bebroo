@@ -55,6 +55,22 @@ suspend fun getGoogleInfo(token: String): GoogleInfo {
     }
 }
 
+fun updateUserAndGetId(googleInfo: GoogleInfo): Int {
+    return transaction {
+        val user = Users.select { Users.googleId eq googleInfo.id }.firstOrNull()
+        user?.let {
+            Users.update({ Users.googleId eq googleInfo.id }) {
+                it[avatarUrl] = googleInfo.picture
+            }
+            user[Users.id].value
+        } ?: Users.insertAndGetId {
+            it[googleId] = googleInfo.id
+            it[displayName] = googleInfo.name
+            it[avatarUrl] = googleInfo.picture
+        }.value
+    }
+}
+
 fun Route.googleOAuth() {
     authenticate("google-oauth") {
         get("/googleAuthorize") {
@@ -66,23 +82,11 @@ fun Route.googleOAuth() {
             val targetOrigin = application.environment.config.property("googleOAuth.targetOrigin").getString()
             principal?.let {
                 val oauthToken = principal.accessToken
+
                 val googleInfo = getGoogleInfo(oauthToken)
+                val userId = updateUserAndGetId(googleInfo)
+                val token = application.createToken(userId)
 
-                val userId = transaction {
-                    val user = Users.select { Users.googleId eq googleInfo.id }.firstOrNull()
-                    user?.let {
-                        Users.update({ Users.googleId eq googleInfo.id }) {
-                            it[avatarUrl] = googleInfo.picture
-                        }
-                        user[Users.id].value
-                    } ?: Users.insertAndGetId {
-                        it[googleId] = googleInfo.id
-                        it[displayName] = googleInfo.name
-                        it[avatarUrl] = googleInfo.picture
-                    }.value
-                }
-
-                val token = createToken(application.environment, userId)
                 call.respond(
                     FreeMarkerContent(
                         "googleOAuthSuccess.ftl",
@@ -121,22 +125,15 @@ fun Route.googleIdToken() {
         idToken?.let {
             val payload = idToken.payload
 
-            val userId = transaction {
-                val user = Users.select { Users.googleId eq payload.subject }.firstOrNull()
-                user?.let {
-                    Users.update({ Users.googleId eq payload.subject }) {
-                        it[displayName] = payload["name"] as String
-                        it[avatarUrl] = payload["picture"] as String
-                    }
-                    user[Users.id].value
-                } ?: Users.insertAndGetId {
-                    it[googleId] = payload.subject
-                    it[displayName] = payload["name"] as String
-                    it[avatarUrl] = payload["picture"] as String
-                }.value
-            }
+            val googleInfo = GoogleInfo(
+                id = payload.subject,
+                name = payload["name"] as String,
+                picture = payload["picture"] as String
+            )
 
-            val token = createToken(application.environment, userId)
+            val userId = updateUserAndGetId(googleInfo)
+            val token = application.createToken(userId)
+
             call.respond(mapOf("token" to token))
         } ?: throw ApiException("Не удалось верифицировать токен")
     }

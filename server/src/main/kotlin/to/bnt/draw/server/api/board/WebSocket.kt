@@ -1,19 +1,12 @@
 package to.bnt.draw.server.api.board
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
-import com.auth0.jwt.exceptions.JWTVerificationException
-import com.auth0.jwt.impl.JWTParser
-import com.auth0.jwt.interfaces.DecodedJWT
-import com.auth0.jwt.interfaces.Payload
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import to.bnt.draw.server.models.Boards
-import to.bnt.draw.server.models.Figures
-import to.bnt.draw.server.models.Users
+import to.bnt.draw.server.api.auth.getUserIdFromToken
+import to.bnt.draw.server.models.*
 import to.bnt.draw.shared.structures.*
 import java.util.*
 import kotlin.run
@@ -25,37 +18,20 @@ suspend fun DefaultWebSocketServerSession.sendAction(action: Action) {
 }
 
 suspend fun DefaultWebSocketServerSession.checkBoardAccessAndClose(boardUuid: UUID, userId: Int?): Boolean {
-    val hasAccess = transaction {
-        val board =
-            Boards.innerJoin(Users).select { Boards.id eq boardUuid }.firstOrNull() ?: return@transaction false
-
-        board[Boards.isPublic] || board[Users.id].value == userId
+    val board = transaction {
+        Boards.innerJoin(Users).select { Boards.id eq boardUuid }.firstOrNull()
     }
-    if (!hasAccess) close()
-    return hasAccess
-}
 
-private fun DecodedJWT.parsePayload(): Payload {
-    val payloadString = String(Base64.getUrlDecoder().decode(payload))
-    return JWTParser().parsePayload(payloadString)
+    return (board?.checkAccessToBoard(userId) ?: false)
+        .also { if (!it) close() }
 }
 
 fun Route.boardWebSocket() {
-    val secret = application.environment.config.property("jwt.secret").getString()
-    val jwtVerifier = JWT.require(Algorithm.HMAC256(secret)).build()
-
-    fun getId(token: String): Payload? {
-        return try {
-            jwtVerifier.verify(token).parsePayload()
-        } catch (e: JWTVerificationException) {
-            null
-        }
-    }
-
     val connectionsForBoard = Collections.synchronizedMap(mutableMapOf<UUID, MutableSet<Connection>>())
 
     webSocket("/{uuid}/websocket") {
-        val userId = call.request.queryParameters["token"]?.let { getId(it)?.getClaim("id")?.asInt() }
+        val userId =
+            call.request.queryParameters["token"]?.let { application.getUserIdFromToken(it) }
         val uuidParameter = call.parameters["uuid"] ?: throw RuntimeException("Trying to open board without uuid")
         val boardUuid = try {
             UUID.fromString(uuidParameter)
@@ -77,14 +53,7 @@ fun Route.boardWebSocket() {
         lastFigureId?.let {
             val figures = transaction {
                 Figures.select { (Figures.board eq boardUuid) and (Figures.id greater lastFigureId) }
-                    .orderBy(Figures.id to SortOrder.ASC).map {
-                    Figure(
-                        id = it[Figures.id].value,
-                        drawingData = it[Figures.drawingData],
-                        color = it[Figures.color],
-                        strokeWidth = it[Figures.strokeWidth]
-                    )
-                }
+                    .orderBy(Figures.id to SortOrder.ASC).map { it.toFigure() }
             }
             figures.forEach {
                 sendAction(AddFigure(figure = it))
@@ -95,12 +64,7 @@ fun Route.boardWebSocket() {
             // send connected users
             val connectedUsers = connections.filter { it.userId != null }.map {
                 transaction {
-                    val userEntry = Users.select { Users.id eq it.userId }.first()
-                    User(
-                        id = userEntry[Users.id].value,
-                        displayName = userEntry[Users.displayName],
-                        avatarUrl = userEntry[Users.avatarUrl]
-                    )
+                    Users.select { Users.id eq it.userId }.first().toUser()
                 }
             }
             sendAction(ConnectedUsers(connectedUsers))
@@ -108,12 +72,7 @@ fun Route.boardWebSocket() {
             // notify others of user connected
             userId?.let {
                 val user = transaction {
-                    val userEntry = Users.select { Users.id eq userId }.first()
-                    User(
-                        id = userEntry[Users.id].value,
-                        displayName = userEntry[Users.displayName],
-                        avatarUrl = userEntry[Users.avatarUrl]
-                    )
+                    Users.select { Users.id eq userId }.first().toUser()
                 }
                 connections.forEach {
                     if (it == connection) return@forEach
@@ -130,7 +89,6 @@ fun Route.boardWebSocket() {
                     is AddFigure -> {
                         if (!checkBoardAccessAndClose(boardUuid, userId)) continue
                         val figure = action.figure
-                        val localId = action.localId
                         val figureId = transaction {
                             Figures.insertAndGetId {
                                 it[board] = boardUuid
@@ -143,7 +101,7 @@ fun Route.boardWebSocket() {
                         connections.forEach {
                             if (!checkBoardAccessAndClose(boardUuid, it.userId)) return@forEach
                             if (it == connection) {
-                                localId?.let { localId -> it.session.sendAction(FigureAck(localId, figureId)) }
+                                action.localId?.let { localId -> it.session.sendAction(FigureAck(localId, figureId)) }
                             } else {
                                 it.session.sendAction(AddFigure(figure = figure))
                             }

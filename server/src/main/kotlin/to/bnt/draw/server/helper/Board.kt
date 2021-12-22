@@ -2,10 +2,11 @@ package to.bnt.draw.server.helper
 
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import to.bnt.draw.server.api.board.checkAccessToBoard
 import to.bnt.draw.server.models.Boards
 import to.bnt.draw.server.models.Users
+import to.bnt.draw.server.models.toBoard
 import to.bnt.draw.shared.structures.Board
-import to.bnt.draw.shared.structures.User
 import java.util.*
 
 fun getBoardByUuid(uuid: String): Board? {
@@ -19,19 +20,10 @@ fun getBoardByUuid(uuid: String): Board? {
         val board = Boards.innerJoin(Users).select { Boards.id eq boardUuid }.firstOrNull()
 
         board?.let {
-            if (!it[Boards.isPublic]) {
-                null
+            if (it.checkAccessToBoard(null)) {
+                it.toBoard()
             } else {
-                Board(
-                    uuid = board[Boards.id].value.toString(),
-                    name = board[Boards.name],
-                    creator = User(
-                        id = board[Users.id].value,
-                        displayName = board[Users.displayName],
-                        avatarUrl = board[Users.avatarUrl]
-                    ),
-                    isPublic = it[Boards.isPublic]
-                )
+                null
             }
         }
     }

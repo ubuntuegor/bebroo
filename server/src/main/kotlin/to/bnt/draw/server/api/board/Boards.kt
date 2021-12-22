@@ -2,51 +2,35 @@ package to.bnt.draw.server.api.board
 
 import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.auth.jwt.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import to.bnt.draw.server.api.auth.getUserId
 import to.bnt.draw.server.api.exceptions.ApiException
 import to.bnt.draw.server.api.exceptions.ForbiddenException
 import to.bnt.draw.server.api.exceptions.InvalidTokenException
 import to.bnt.draw.server.api.exceptions.MissingParameterException
-import to.bnt.draw.server.models.Boards
-import to.bnt.draw.server.models.Figures
-import to.bnt.draw.server.models.Users
-import to.bnt.draw.server.models.UsersToBoards
-import to.bnt.draw.shared.structures.Board
-import to.bnt.draw.shared.structures.Figure
-import to.bnt.draw.shared.structures.User
+import to.bnt.draw.server.models.*
 import java.lang.IllegalArgumentException
 import java.time.Instant
 import java.util.*
 
+fun ResultRow.checkAccessToBoard(userId: Int?) =
+    this[Boards.isPublic] || this[Users.id].value == userId
+
 fun Route.listBoards() {
     authenticate("user") {
         get("/list") {
-            val userId =
-                call.principal<JWTPrincipal>()?.payload?.getClaim("id")?.asInt() ?: throw InvalidTokenException()
+            val userId = call.getUserId() ?: throw InvalidTokenException()
             val response = transaction {
                 val boards = UsersToBoards
                     .innerJoin(Boards)
                     .innerJoin(Users, { Boards.creator }, { Users.id })
                     .select { UsersToBoards.user eq userId }
                     .orderBy(UsersToBoards.lastOpened to SortOrder.DESC_NULLS_FIRST)
-                boards.map {
-                    Board(
-                        uuid = it[Boards.id].value.toString(),
-                        name = it[Boards.name],
-                        creator = User(
-                            id = it[Users.id].value,
-                            displayName = it[Users.displayName],
-                            avatarUrl = it[Users.avatarUrl]
-                        ),
-                        isPublic = it[Boards.isPublic],
-                        timestamp = it[UsersToBoards.lastOpened].epochSecond
-                    )
-                }
+                boards.map { it.toBoard() }
             }
             call.respond(response)
         }
@@ -56,7 +40,7 @@ fun Route.listBoards() {
 fun Route.openBoard() {
     authenticate("user", optional = true) {
         get("/{uuid}") {
-            val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("id")?.asInt()
+            val userId = call.getUserId()
             val uuidParameter = call.parameters["uuid"] ?: throw RuntimeException("Trying to open board without uuid")
             val boardUuid = try {
                 UUID.fromString(uuidParameter)
@@ -68,13 +52,12 @@ fun Route.openBoard() {
             val showFigures = call.request.queryParameters["showFigures"].toBoolean()
 
             val response = transaction {
-                val board = Boards.innerJoin(Users).select { Boards.id eq boardUuid }.firstOrNull()
+                val boardRow = Boards.innerJoin(Users).select { Boards.id eq boardUuid }.firstOrNull()
                     ?: throw ApiException("Такой доски не существует")
 
-                if (!board[Boards.isPublic] && board[Users.id].value != userId) {
-                    userId?.let {
-                        throw ForbiddenException()
-                    } ?: throw InvalidTokenException()
+                if (!boardRow.checkAccessToBoard(userId)) {
+                    userId?.let { throw ForbiddenException() }
+                        ?: throw InvalidTokenException()
                 }
 
                 // Update user who opened the board
@@ -87,49 +70,27 @@ fun Route.openBoard() {
                             it[lastOpened] = Instant.now()
                         }
                     } ?: UsersToBoards.insert {
-                        it[UsersToBoards.board] = boardUuid
+                        it[board] = boardUuid
                         it[user] = userId
                         it[lastOpened] = Instant.now()
                     }
                 }
 
                 val contributors = if (showContributors) {
-                    UsersToBoards.innerJoin(Users).select { UsersToBoards.board eq boardUuid }.map {
-                        User(
-                            id = it[Users.id].value,
-                            displayName = it[Users.displayName],
-                            avatarUrl = it[Users.avatarUrl]
-                        )
-                    }
+                    UsersToBoards.innerJoin(Users)
+                        .select { UsersToBoards.board eq boardUuid }.map { it.toUser() }
                 } else {
                     null
                 }
 
                 val figures = if (showFigures) {
-                    Figures.select { Figures.board eq boardUuid }.orderBy(Figures.id to SortOrder.ASC).map {
-                        Figure(
-                            id = it[Figures.id].value,
-                            drawingData = it[Figures.drawingData],
-                            color = it[Figures.color],
-                            strokeWidth = it[Figures.strokeWidth]
-                        )
-                    }
+                    Figures.select { Figures.board eq boardUuid }
+                        .orderBy(Figures.id to SortOrder.ASC).map { it.toFigure() }
                 } else {
                     null
                 }
 
-                Board(
-                    uuid = board[Boards.id].value.toString(),
-                    name = board[Boards.name],
-                    creator = User(
-                        id = board[Users.id].value,
-                        displayName = board[Users.displayName],
-                        avatarUrl = board[Users.avatarUrl]
-                    ),
-                    isPublic = board[Boards.isPublic],
-                    contributors = contributors,
-                    figures = figures
-                )
+                boardRow.toBoard(contributors, figures)
             }
 
             call.respond(response)
@@ -140,8 +101,7 @@ fun Route.openBoard() {
 fun Route.modifyBoard() {
     authenticate("user") {
         patch("/{uuid}") {
-            val userId =
-                call.principal<JWTPrincipal>()?.payload?.getClaim("id")?.asInt() ?: throw InvalidTokenException()
+            val userId = call.getUserId() ?: throw InvalidTokenException()
             val uuidParameter = call.parameters["uuid"] ?: throw RuntimeException("Trying to open board without uuid")
             val boardUuid = try {
                 UUID.fromString(uuidParameter)
@@ -178,8 +138,7 @@ fun Route.modifyBoard() {
 fun Route.createBoard() {
     authenticate("user") {
         post("/create") {
-            val userId =
-                call.principal<JWTPrincipal>()?.payload?.getClaim("id")?.asInt() ?: throw InvalidTokenException()
+            val userId = call.getUserId() ?: throw InvalidTokenException()
 
             val parameters = call.receiveParameters()
             val name = parameters["name"] ?: throw MissingParameterException("name")
