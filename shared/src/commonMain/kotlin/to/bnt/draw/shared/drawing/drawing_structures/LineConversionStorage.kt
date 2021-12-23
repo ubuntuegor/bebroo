@@ -217,7 +217,7 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
         )
         rectanglesStorage.addRectangle(
             lineID,
-            smoothedLineInWorldSystem.getContainingRectangle() ?: return null
+            smoothedLineInWorldSystem.containingRectangle ?: return null
         )
         linesID.add(lineID)
 
@@ -234,7 +234,7 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
         val smoothedLineInWorldSystem = addLineWithSmooth(lineID, simplifiedLine)
         rectanglesStorage.addRectangle(
             lineID,
-            smoothedLineInWorldSystem.getContainingRectangle() ?: return null
+            smoothedLineInWorldSystem.containingRectangle ?: return null
         )
         linesID.add(lineID)
 
@@ -289,12 +289,11 @@ class LineConversionStorage(private var screenWidth: Int, private var screenHeig
     }
 
     private fun convertDisplayingLinesInScreenSystem(): List<Line> {
-        return smoothedLinesStorage.getLines().map { convertLineFromWorldToScreenSystem(it) }
+        return smoothedLinesStorage.lines.map { convertLineFromWorldToScreenSystem(it) }
     }
 
-    fun getDisplayingLines(): List<Line> {
-        return convertDisplayingLinesInScreenSystem()
-    }
+    val displayingLines: List<Line>
+        get() = convertDisplayingLinesInScreenSystem()
 
     fun changeScaleCoefficient(newScaleCoefficient: Double) {
         if (newScaleCoefficient <= 0.0) return

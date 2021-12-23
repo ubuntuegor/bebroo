@@ -15,8 +15,8 @@ private fun calculateTCoefficient(
     previousPoint: Point,
     currentPoint: Point
 ): Double {
-    val (previousX, previousY) = previousPoint.getCoordinates()
-    val (currentX, currentY) = currentPoint.getCoordinates()
+    val (previousX, previousY) = previousPoint.coordinates
+    val (currentX, currentY) = currentPoint.coordinates
     return (sqr(currentX - previousX) + sqr(currentY - previousY))
         .pow(ALPHA_COEFFICIENT / 2.0) + previousTCoefficient
 }
@@ -74,7 +74,7 @@ private fun calculateIntervalDistribution(firstPoint: Double, secondPoint: Doubl
 }
 
 private fun calculateCatmullRomSplinePoints(spline: Spline, distributionSegmentsCount: Long): List<Point> {
-    val points = spline.getPoints()
+    val points = spline.points
     val tList = mutableListOf(0.0)
     for (i in 0..2) {
         tList.add(calculateTCoefficient(tList.last(), points[i], points[i + 1]))

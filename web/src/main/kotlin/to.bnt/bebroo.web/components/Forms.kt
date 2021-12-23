@@ -39,6 +39,12 @@ val authenticationForm = fc<Props> {
         }
     }
 
+    val redirectAfterAuth = {
+        val params = URLSearchParams(location.search)
+        val to = params.get("returnUrl") ?: "/home"
+        history.push(to)
+    }
+
     fun TextFieldProps.defaultFormParams() {
         isRequired = true
         maxCharacters = 100
@@ -55,9 +61,7 @@ val authenticationForm = fc<Props> {
                 }
 
                 window.localStorage.setItem("token", token)
-                val params = URLSearchParams(location.search)
-                val to = params.get("returnUrl") ?: "/home"
-                history.push(to)
+                redirectAfterAuth()
             } catch (e: ApiException) {
                 authError = e.message
             } finally {
@@ -73,9 +77,7 @@ val authenticationForm = fc<Props> {
             try {
                 val token = client.googleOAuthPopup().await()
                 window.localStorage.setItem("token", token)
-                val params = URLSearchParams(location.search)
-                val to = params.get("returnUrl") ?: "/home"
-                history.push(to)
+                redirectAfterAuth()
             } catch (e: ApiException) {
                 authError = e.message
             } finally {

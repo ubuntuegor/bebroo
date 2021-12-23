@@ -117,7 +117,7 @@ class DrawingBoardWebSocket(
         val lineId = conversionStorage.getLineAtPoint(point)
         val figureId = lineToFigureId[lineId]
         figureId?.let {
-            conversionStorage.removeLine(lineId!!)
+            super.clearLineAtPoint(point)
             CoroutineScope(Dispatchers.Default).launch {
                 connection?.sendAction(RemoveFigure(it))
             }

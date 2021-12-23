@@ -12,13 +12,14 @@ data class Line(private val linePoints: List<Point> = emptyList(), var strokeWid
         initializeExtremeCoordinatesValues()
     }
 
-    fun getContainingRectangle(): Rectangle? {
-        if (_points.isEmpty()) return null
-        return Rectangle(
-            Point(smallestXCoordinate, biggestYCoordinate),
-            Point(biggestXCoordinate, smallestYCoordinate)
-        )
-    }
+    val containingRectangle: Rectangle?
+        get() {
+            if (_points.isEmpty()) return null
+            return Rectangle(
+                Point(smallestXCoordinate, biggestYCoordinate),
+                Point(biggestXCoordinate, smallestYCoordinate)
+            )
+        }
 
     private fun initializeExtremeCoordinatesValues() {
         _points.forEach { updateExtremeCoordinatesValues(it) }

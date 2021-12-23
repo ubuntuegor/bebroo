@@ -551,7 +551,7 @@ val shareCard = fc<ShareCardProps> { props ->
 
                         customCheckBox {
                             attrs.isChecked = board.isPublic
-                            attrs.disabled = isLoading
+                            attrs.isDisabled = isLoading
                             attrs.onChange = changePublicHandler
                         }
                     }

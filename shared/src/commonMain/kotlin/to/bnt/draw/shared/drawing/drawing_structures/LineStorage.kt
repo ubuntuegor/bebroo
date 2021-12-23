@@ -14,5 +14,6 @@ class LineStorage {
 
     fun containsLine(lineID: Long): Boolean = storage.contains(lineID)
 
-    fun getLines(): List<Line> = storage.values.toList()
+    val lines: List<Line>
+        get() = storage.values.toList()
 }

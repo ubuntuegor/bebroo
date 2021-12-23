@@ -37,7 +37,8 @@ open class DrawingBoard(private val canvas: SharedCanvas) {
 
     open fun onMouseDown(point: Point) {
         isDrawing = true
-        if (!isEraser) drawingLine.addPoint(point)
+        if (isEraser) clearLineAtPoint(point)
+        else drawingLine.addPoint(point)
     }
 
     fun onMouseMove(point: Point) {
@@ -108,7 +109,7 @@ open class DrawingBoard(private val canvas: SharedCanvas) {
 
     protected fun redrawLines() {
         canvas.clear()
-        conversionStorage.getDisplayingLines()
+        conversionStorage.displayingLines
             .forEach { canvas.drawLine(it.points, Paint(strokeColor = it.strokeColor, strokeWidth = it.strokeWidth)) }
         canvas.drawLine(
             drawingLine.points,

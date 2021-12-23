@@ -38,9 +38,9 @@ val roundedTextField = fc<TextFieldProps> { props ->
         }
         input(type = if (props.isPassword == true) InputType.password else InputType.text) {
             attrs {
-                readonly = props.isReadOnly == true
+                props.isReadOnly?.let { readonly = it }
                 props.maxCharacters?.let { maxLength = it.toString() }
-                required = props.isRequired == true
+                props.isRequired?.let { required = it }
                 value = props.value!!
                 props.onChange?.let { onChangeFunction = it }
                 if (props.selectOnClick == true) {
@@ -64,9 +64,9 @@ val minimalTextField = fc<TextFieldProps> { props ->
         }
         input(type = if (props.isPassword == true) InputType.password else InputType.text) {
             attrs {
-                readonly = props.isReadOnly == true
+                props.isReadOnly?.let { readonly = it }
                 props.maxCharacters?.let { maxLength = it.toString() }
-                required = props.isRequired == true
+                props.isRequired?.let { required = it }
                 value = props.value!!
                 props.onChange?.let { onChangeFunction = it }
                 if (props.selectOnClick == true) {
@@ -80,7 +80,7 @@ val minimalTextField = fc<TextFieldProps> { props ->
 external interface CheckBoxProps : Props {
     var isChecked: Boolean?
     var onChange: ((Boolean) -> Unit)?
-    var disabled: Boolean?
+    var isDisabled: Boolean?
 }
 
 val customCheckBox = fc<CheckBoxProps> { props ->
@@ -90,11 +90,11 @@ val customCheckBox = fc<CheckBoxProps> { props ->
         }
 
         input(InputType.checkBox) {
-            attrs.checked = props.isChecked == true
+            props.isChecked?.let { attrs.checked = it }
             props.onChange?.let {
                 attrs.onChangeFunction = { event -> it((event.target as HTMLInputElement).checked) }
             }
-            attrs.disabled = props.disabled == true
+            props.isDisabled?.let { attrs.disabled = it }
         }
 
         div("checkbox-bar") {}

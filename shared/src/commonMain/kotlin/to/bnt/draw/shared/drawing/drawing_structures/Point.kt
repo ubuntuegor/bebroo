@@ -11,7 +11,8 @@ data class Point(var x: Double, var y: Double) {
 
     operator fun div(number: Double) = Point(x / number, y / number)
 
-    fun getCoordinates(): Pair<Double, Double> = Pair(x, y)
+    val coordinates: Pair<Double, Double>
+        get() = Pair(x, y)
 
     fun getVectorTo(toPoint: Point) = toPoint - this
 
